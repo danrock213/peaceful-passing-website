@@ -1,0 +1,7 @@
+{
+  "/page": "app/page.js",
+  "/vendors/page": "app/vendors/page.js",
+  "/tribute/page": "app/tribute/page.js",
+  "/vendors/[category]/page": "app/vendors/[category]/page.js",
+  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js"
+}
