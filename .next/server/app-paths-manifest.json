@@ -1,7 +1,9 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/page": "app/page.js",
   "/vendors/page": "app/vendors/page.js",
-  "/tribute/page": "app/tribute/page.js",
+  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js",
   "/vendors/[category]/page": "app/vendors/[category]/page.js",
-  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js"
+  "/user-auth/page": "app/user-auth/page.js"
 }

@@ -7,6 +7,7 @@ export function isLocationMatch(search: string, vendorLocation: string): boolean
   const normalizedSearch = normalize(search);
   const normalizedVendorLoc = normalize(vendorLocation);
 
+  // Basic fuzzy substring check: true if either string includes the other
   return (
     normalizedVendorLoc.includes(normalizedSearch) ||
     normalizedSearch.includes(normalizedVendorLoc)
