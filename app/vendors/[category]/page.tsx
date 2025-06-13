@@ -12,7 +12,9 @@ import { isLocationMatch, getCategoryLabel } from '@/lib/vendorUtils';
 const RADIUS_OPTIONS = [10, 25, 50, 100];
 
 export default function VendorCategoryPage() {
-  const { category } = useParams();
+  const params = useParams();
+  const category = Array.isArray(params?.category) ? params.category[0] : params?.category;
+
   const [locationSearch, setLocationSearch] = useState('');
   const [radius, setRadius] = useState(50);
   const { coords: searchCoords, loading } = useGeocode(locationSearch);
@@ -30,7 +32,7 @@ export default function VendorCategoryPage() {
     );
   }
 
-  let filteredVendors = vendors.filter((v) => v.category === category);
+  let filteredVendors = (vendors ?? []).filter((v) => v.category === category);
 
   if (searchCoords) {
     filteredVendors = filteredVendors.filter((v) => {
@@ -42,7 +44,6 @@ export default function VendorCategoryPage() {
   } else if (locationSearch.trim() !== '') {
     filteredVendors = filteredVendors.filter((v) => isLocationMatch(locationSearch, v.location));
   }
-
   return (
     <main className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4 text-[#1D3557]">{readableCategory}</h1>

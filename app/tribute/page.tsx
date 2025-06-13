@@ -1,10 +1,9 @@
-// File: app/tribute/page.tsx
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/authContext";
-import { useRouter } from "next/navigation";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/authContext';
+import { useRouter } from 'next/navigation';
 
 export interface Tribute {
   id: string;
@@ -17,10 +16,12 @@ export interface Tribute {
 
 export default function TributeListPage() {
   const [tributes, setTributes] = useState<Tribute[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem("tributes");
+    const stored = localStorage.getItem('tributes');
     if (stored) setTributes(JSON.parse(stored));
   }, []);
 
@@ -28,16 +29,24 @@ export default function TributeListPage() {
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleCreateClick = () => {
+    if (user) {
+      router.push('/tribute/create');
+    } else {
+      router.push('/user-auth');
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#1D3557]">Tribute Pages</h1>
-        <Link
-          href="/tribute/create"
+        <button
+          onClick={handleCreateClick}
           className="bg-[#1D3557] text-white px-4 py-2 rounded hover:bg-[#F4A261] hover:text-[#1D3557]"
         >
           + New Tribute
-        </Link>
+        </button>
       </div>
       <input
         type="text"
