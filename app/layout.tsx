@@ -3,7 +3,7 @@ import { AuthProvider } from '@/lib/authContext';
 import Header from '@/components/Header';
 
 export const metadata = {
-  title: 'Peaceful Passing',
+  title: 'Starlit Passage',
   description: 'Funeral planning made simple',
 };
 

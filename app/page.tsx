@@ -6,12 +6,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#EAF4FF] flex flex-col">
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-20 max-w-4xl mx-auto">
+      <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-2 max-w-4xl mx-auto">
         {/* Logo, Name, and Tagline */}
 {/* Logo, Name, and Tagline */}
 <div className="bg-white rounded-2xl p-10 shadow-lg flex flex-col items-center mb-10 w-full max-w-md mx-auto">
-  <Image src="/logo.png" alt="Peaceful Passing Logo" width={80} height={80} />
-  <h1 className="mt-4 text-4xl font-extrabold text-[#1D3557]">Peaceful Passing</h1>
+  <Image src="/logo.png" alt="Starlit Passage Logo" width={200} height={200} />
+  <h1 className="mt-4 text-4xl font-extrabold text-[#1D3557]">Starlit Passage</h1>
   <p className="mt-3 text-xl font-semibold text-[#1D3557] italic text-center">
     One place to plan, coordinate, and commemorate
   </p>

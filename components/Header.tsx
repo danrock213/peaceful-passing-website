@@ -33,9 +33,9 @@ export default function Header() {
             tabIndex={0}
             onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
           >
-            <Image src="/logo.png" alt="Peaceful Passing Logo" width={40} height={40} />
+            <Image src="/logo.png" alt="Starlit Passage Logo" width={40} height={40} />
             <span className="text-2xl font-bold text-[#1D3557] hover:text-[#F4A261] transition-colors select-none">
-              Peaceful Passing
+              Starlit Passage
             </span>
           </div>
 
@@ -108,12 +108,13 @@ export default function Header() {
               </div>
             </div>
 
-            <button
-              onClick={() => handleProtectedNav('/tribute')}
-              className="hover:text-[#F4A261] transition-colors"
-            >
-              Tribute Page
-            </button>
+<Link
+  href="/tribute"
+  className="hover:text-[#F4A261] transition-colors"
+>
+  Tribute Page
+</Link>
+
 
             {/* Admin Dashboard (Admins Only) */}
             {user?.role === 'admin' && (
