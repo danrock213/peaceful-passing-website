@@ -29,6 +29,9 @@ export default function Header() {
           <div
             className="flex items-center space-x-3 cursor-pointer mb-2"
             onClick={handleLogoClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
           >
             <Image src="/logo.png" alt="Peaceful Passing Logo" width={40} height={40} />
             <span className="text-2xl font-bold text-[#1D3557] hover:text-[#F4A261] transition-colors select-none">
@@ -46,36 +49,60 @@ export default function Header() {
 
             {/* Vendors Dropdown */}
             <div className="relative group">
-              <button className="hover:text-[#F4A261] transition-colors">
+              <button
+                aria-haspopup="true"
+                aria-expanded="false"
+                className="hover:text-[#F4A261] transition-colors"
+              >
                 Vendors ▾
               </button>
-              <div
-                className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50"
-                onMouseEnter={(e) => e.currentTarget.classList.add('opacity-100', 'visible')}
-                onMouseLeave={(e) => e.currentTarget.classList.remove('opacity-100', 'visible')}
-              >
-                <Link href="/vendors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-200 z-50">
+                <Link
+                  href="/vendors"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   All Vendors
                 </Link>
-                <Link href="/vendors/funeral-homes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/funeral-homes"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Funeral Homes
                 </Link>
-                <Link href="/vendors/crematoriums" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/crematoriums"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Crematoriums
                 </Link>
-                <Link href="/vendors/florists" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/florists"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Florists
                 </Link>
-                <Link href="/vendors/grief-counselors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/grief-counselors"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Grief Counselors
                 </Link>
-                <Link href="/vendors/estate-lawyers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/estate-lawyers"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Estate Lawyers
                 </Link>
-                <Link href="/vendors/memorial-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/memorial-products"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Memorial Products
                 </Link>
-                <Link href="/vendors/event-venues" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <Link
+                  href="/vendors/event-venues"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
                   Event Venues
                 </Link>
               </div>
@@ -90,18 +117,20 @@ export default function Header() {
 
             {/* Admin Dashboard (Admins Only) */}
             {user?.role === 'admin' && (
-              <Link
-                href="/admin/dashboard"
-                className="hover:text-[#F4A261] transition-colors"
-              >
+              <Link href="/admin/dashboard" className="hover:text-[#F4A261] transition-colors">
                 Admin Dashboard
               </Link>
             )}
 
             {/* Messages Icon */}
             {user && (
-              <button onClick={() => router.push('/messages')} className="relative">
-                <span className="text-lg">💬</span>
+              <button
+                onClick={() => router.push('/messages')}
+                className="relative text-lg"
+                aria-label="Messages"
+                title="Messages"
+              >
+                <span aria-hidden="true">💬</span>
                 {user.unreadMessages > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1">
                     {user.unreadMessages}

@@ -14,7 +14,7 @@ const RADIUS_OPTIONS = [10, 25, 50, 100];
 export default function VendorCategoryPage() {
   const { category } = useParams();
   const [locationSearch, setLocationSearch] = useState('');
-  const [radius, setRadius] = useState(50); // default radius
+  const [radius, setRadius] = useState(50);
   const { coords: searchCoords, loading } = useGeocode(locationSearch);
 
   const readableCategory = typeof category === 'string' ? getCategoryLabel(category) : null;
@@ -30,23 +30,23 @@ export default function VendorCategoryPage() {
     );
   }
 
-  // Filter vendors by category
   let filteredVendors = vendors.filter((v) => v.category === category);
 
-  // If geocoded coordinates are available, filter by distance
   if (searchCoords) {
     filteredVendors = filteredVendors.filter((v) => {
       if (!v.lat || !v.lng) return false;
       const distance = getDistanceInKm(searchCoords.lat, searchCoords.lng, v.lat, v.lng);
-      return distance <= radius;
+      const locationMatch = isLocationMatch(locationSearch, v.location);
+      return distance <= radius && locationMatch;
     });
+  } else if (locationSearch.trim() !== '') {
+    filteredVendors = filteredVendors.filter((v) => isLocationMatch(locationSearch, v.location));
   }
 
   return (
     <main className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4 text-[#1D3557]">{readableCategory}</h1>
 
-      {/* Location + Radius Filters */}
       <div className="mb-6 space-y-2">
         <input
           type="text"
@@ -78,33 +78,52 @@ export default function VendorCategoryPage() {
         )}
       </div>
 
-      {/* Vendor List */}
       {filteredVendors.length === 0 ? (
         <p className="text-gray-500">No vendors found in this category and location.</p>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {filteredVendors.map((vendor) => (
-            <li
-              key={vendor.id}
-              className="border rounded shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => alert('Vendor detail page not implemented yet')}
-            >
-              <div className="relative h-40 w-full">
-                <Image
-                  src={vendor.imageUrl}
-                  alt={vendor.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 50vw"
-                />
-              </div>
-              <div className="p-4">
-                <h2 className="text-xl font-semibold text-[#1D3557]">{vendor.name}</h2>
-                <p className="text-sm text-gray-600">{vendor.location}</p>
-                <p className="mt-2 text-gray-700 text-sm">{vendor.description}</p>
-              </div>
-            </li>
-          ))}
+          {filteredVendors.map((vendor) => {
+            const vendorReviews = vendor.reviews || [];
+            const avgRating =
+              vendorReviews.length > 0
+                ? vendorReviews.reduce((sum, r) => sum + r.rating, 0) / vendorReviews.length
+                : null;
+
+            return (
+              <li key={vendor.id} className="cursor-pointer">
+                <Link
+                  href={`/vendors/${category}/${vendor.id}`}
+                  className="block border rounded shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  <div className="relative h-40 w-full">
+                    <Image
+                      src={vendor.imageUrl}
+                      alt={vendor.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h2 className="text-xl font-semibold text-[#1D3557]">{vendor.name}</h2>
+                    <p className="text-sm text-gray-600">{vendor.location}</p>
+                    <p className="mt-2 text-gray-700 text-sm line-clamp-2">{vendor.description}</p>
+                    {avgRating && (
+                      <p className="mt-2 text-sm text-yellow-600">
+                        ⭐ {avgRating.toFixed(1)} ({vendorReviews.length}{' '}
+                        <Link
+                          href={`/vendors/${category}/${vendor.id}#reviews`}
+                          className="underline text-blue-600"
+                        >
+                          {vendorReviews.length === 1 ? 'review' : 'reviews'}
+                        </Link>)
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>
