@@ -1,57 +1,43 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getCategoryLabel } from '@/lib/vendorUtils';
+import { Vendor } from '@/data/vendors';
+import { calculateAverageRating } from '@/lib/vendorUtils';
+import StarRatingDisplay from './StarRatingDisplay';
 
-interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  location: string;
-  imageUrl: string;
-  reviews?: { rating: number }[];
+interface Props {
+  vendor: Vendor;
 }
 
-export default function VendorCard({ vendor }: { vendor: Vendor }) {
-  const reviews = vendor.reviews || [];
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((a, r) => a + r.rating, 0) / reviews.length
-      : null;
+export default function VendorCard({ vendor }: Props) {
+  const avg = vendor.reviews ? calculateAverageRating(vendor.reviews) : null;
 
   return (
-    <li className="cursor-pointer">
-      <Link
-        href={`/vendors/${vendor.category}/${vendor.id}`}
-        className="block border rounded shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-      >
-        <div className="relative h-40 w-full">
-          <Image
-            src={vendor.imageUrl}
-            alt={vendor.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 50vw"
-          />
-        </div>
-        <div className="p-4">
-          <h2 className="text-xl font-semibold text-[#1D3557]">{vendor.name}</h2>
-          <p className="text-sm text-gray-600">{vendor.location}</p>
-          <p className="mt-2 text-gray-700 text-sm line-clamp-2">
-            {vendor.description}
-          </p>
-          {avgRating !== null && (
-            <p className="mt-2 text-sm text-yellow-600">
-              ⭐ {avgRating.toFixed(1)} (
-              <span className="underline text-blue-600">
-                {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
-              </span>
-              )
-            </p>
-          )}
-        </div>
-      </Link>
-    </li>
+    <Link
+      href={`/vendors/${vendor.category}/${vendor.id}`}
+      className="group block border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
+      aria-label={`View details for ${vendor.name}`}
+    >
+      <div className="relative w-full h-40 bg-gray-100">
+        <Image
+          src={vendor.imageUrl ?? '/images/placeholders/vendor.png'}
+          alt={vendor.name}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          sizes="(max-width: 768px) 100vw, 25vw"
+          priority={false}
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-[#1D3557] truncate">{vendor.name}</h3>
+        <p className="text-sm text-gray-600 truncate">{vendor.location}</p>
+        {avg !== null && (
+          <div className="text-sm text-yellow-600 mt-1 flex items-center gap-1">
+            <StarRatingDisplay rating={avg} size={14} />
+            <span>{avg.toFixed(1)} ({vendor.reviews.length})</span>
+          </div>
+        )}
+      </div>
+    </Link>
   );
 }

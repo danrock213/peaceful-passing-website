@@ -1,83 +1,57 @@
-// File: app/tribute/create/page.tsx
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authContext";
-import { Tribute } from "../page";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Tribute } from '@/types/tribute';
+import { getTributes, saveTributes } from '@/utils/tributeStorage';
 
 export default function CreateTributePage() {
-  const { user } = useAuth();
   const router = useRouter();
 
-  if (!user) {
-    router.push("/user-auth");
-    return null;
-  }
+  const [name, setName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [deathDate, setDeathDate] = useState('');
+  const [story, setStory] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
 
-  const [form, setForm] = useState({
-    name: "",
-    birthDate: "",
-    deathDate: "",
-    obituary: "",
-  });
+  const isSignedIn = true; // Replace this
+  const userName = 'DemoUser'; // Replace this
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const id = crypto.randomUUID();
+
     const newTribute: Tribute = {
-      ...form,
-      id,
-      creatorId: user.id,
+      id: Date.now().toString(),
+      name,
+      birthDate,
+      deathDate,
+      story,
+      imageUrl,
+      createdBy: userName,
     };
-    const stored = JSON.parse(localStorage.getItem("tributes") || "[]");
-    stored.push(newTribute);
-    localStorage.setItem("tributes", JSON.stringify(stored));
-    router.push(`/tribute/${id}`);
+
+    const updatedTributes = [newTribute, ...getTributes()];
+    saveTributes(updatedTributes);
+
+    router.push(`/tribute/${newTribute.id}`);
+  }
+
+  if (!isSignedIn) {
+    router.push('/sign-in');
+    return null;
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold text-[#1D3557] mb-6">Create Tribute</h1>
+    <main className="max-w-2xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Create Tribute Page</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          required
-          type="text"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="w-full border px-4 py-2 rounded"
-        />
-        <div className="flex gap-4">
-          <input
-            type="date"
-            required
-            value={form.birthDate}
-            onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
-            className="w-full border px-4 py-2 rounded"
-          />
-          <input
-            type="date"
-            required
-            value={form.deathDate}
-            onChange={(e) => setForm({ ...form, deathDate: e.target.value })}
-            className="w-full border px-4 py-2 rounded"
-          />
-        </div>
-        <textarea
-          required
-          placeholder="Obituary..."
-          value={form.obituary}
-          onChange={(e) => setForm({ ...form, obituary: e.target.value })}
-          className="w-full border px-4 py-2 h-40 rounded"
-        />
-        <button
-          type="submit"
-          className="bg-[#1D3557] text-white px-6 py-2 rounded hover:bg-[#F4A261] hover:text-[#1D3557]"
-        >
-          Save Tribute
-        </button>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full p-2 border rounded" />
+        <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className="w-full p-2 border rounded" />
+        <input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} className="w-full p-2 border rounded" />
+        <textarea value={story} onChange={(e) => setStory(e.target.value)} placeholder="Life story..." className="w-full p-2 border rounded" rows={4} />
+        <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Image URL (optional)" className="w-full p-2 border rounded" />
+        <button type="submit" className="bg-[#1D3557] text-white px-4 py-2 rounded">Create Tribute</button>
       </form>
-    </div>
+    </main>
   );
 }
