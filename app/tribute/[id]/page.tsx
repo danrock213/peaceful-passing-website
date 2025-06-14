@@ -1,42 +1,25 @@
-// File: app/tribute/[id]/page.tsx
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/lib/authContext";
-import { Tribute } from "../page";
+import { useParams } from 'next/navigation';
+import { getTributeById } from '@/utils/tributeStorage';
+import Image from 'next/image';
 
 export default function TributeDetailPage() {
   const { id } = useParams();
-  const { user } = useAuth();
-  const router = useRouter();
-  const [tribute, setTribute] = useState<Tribute | null>(null);
+  const tribute = getTributeById(id as string);
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("tributes") || "[]");
-    const found = stored.find((t: Tribute) => t.id === id);
-    if (!found) router.push("/tribute");
-    else setTribute(found);
-  }, [id]);
-
-  if (!tribute) return null;
+  if (!tribute) return <p className="p-6 text-red-600">Tribute not found.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-[#1D3557]">{tribute.name}</h1>
-      <p className="text-gray-500 text-sm">
-        {tribute.birthDate} – {tribute.deathDate}
-      </p>
-      <p className="mt-4 whitespace-pre-line text-gray-800">{tribute.obituary}</p>
-      {user?.id === tribute.creatorId && (
-        <Link
-          href={`/tribute/${tribute.id}/edit`}
-          className="inline-block mt-6 text-sm text-[#1D3557] hover:underline"
-        >
-          Edit Tribute
-        </Link>
+    <main className="max-w-2xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-2">{tribute.name}</h1>
+      <p className="text-gray-600 mb-4">{tribute.birthDate} - {tribute.deathDate}</p>
+      {tribute.imageUrl && (
+        <div className="relative w-full h-64 mb-4">
+          <Image src={tribute.imageUrl} alt={tribute.name} fill className="object-cover rounded" />
+        </div>
       )}
-    </div>
+      <p className="whitespace-pre-line text-gray-800">{tribute.story}</p>
+    </main>
   );
 }

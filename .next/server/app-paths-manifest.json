@@ -1,6 +1,8 @@
 {
-  "/vendors/[category]/page": "app/vendors/[category]/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
   "/vendors/page": "app/vendors/page.js",
-  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js"
+  "/tribute/page": "app/tribute/page.js",
+  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js",
+  "/vendors/[category]/page": "app/vendors/[category]/page.js"
 }

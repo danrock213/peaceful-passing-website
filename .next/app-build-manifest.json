@@ -6,20 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/vendors/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/vendors/page.js"
-    ],
     "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/user-auth/page": [
+    "/vendors/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/user-auth/page.js"
+      "static/chunks/app/vendors/page.js"
     ],
     "/vendors/[category]/page": [
       "static/chunks/webpack.js",
@@ -36,20 +31,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/tribute/page.js"
     ],
-    "/sign-up/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/sign-up/page.js"
-    ],
-    "/vendor-auth/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/vendor-auth/page.js"
-    ],
-    "/vendor-sign-up/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/vendor-sign-up/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

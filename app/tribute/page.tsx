@@ -1,70 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import { getTributes } from '@/utils/tributeStorage';
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/authContext';
-import SearchBar from '@/components/SearchBar';
-import { useRouter } from 'next/navigation';
-
-export interface Tribute {
-  id: string;
-  name: string;
-  birthDate: string;
-  deathDate: string;
-  obituary: string;
-  creatorId: string;
-}
+import { Tribute } from '@/types/tribute';
 
 export default function TributeListPage() {
   const [tributes, setTributes] = useState<Tribute[]>([]);
-  const [search, setSearch] = useState('');
-  const { user } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem('tributes');
-    if (stored) setTributes(JSON.parse(stored));
+    setTributes(getTributes());
   }, []);
 
-  const filtered = tributes.filter((t) =>
-    t.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleNewTribute = () => {
-    if (user) {
-      router.push('/tribute/create');
-    } else {
-      router.push('/user-auth');
-    }
-  };
-
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#1D3557]">Tribute Pages</h1>
-        <button
-          onClick={handleNewTribute}
-          className="bg-[#1D3557] text-white px-4 py-2 rounded hover:bg-[#F4A261] hover:text-[#1D3557]"
-        >
-          + Create Tribute Page
-        </button>
-      </div>
-
-      <SearchBar search={search} setSearch={setSearch} placeholder="Search by name..." />
-
+    <main className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Tribute Pages</h1>
+      <Link href="/tribute/create" className="text-blue-600 underline mb-4 block">+ Create New Tribute</Link>
       <ul className="space-y-4">
-        {filtered.map((t) => (
-          <li key={t.id} className="border p-4 rounded shadow bg-white">
-            <Link href={`/tribute/${t.id}`} className="text-xl font-semibold text-[#1D3557]">
-              {t.name}
+        {tributes.length === 0 && <p>No tributes created yet.</p>}
+        {tributes.map((t) => (
+          <li key={t.id} className="border p-4 rounded bg-gray-50 hover:bg-gray-100 transition">
+            <Link href={`/tribute/${t.id}`}>
+              <p className="text-xl font-semibold text-[#1D3557]">{t.name}</p>
+              <p className="text-gray-600 text-sm">{t.birthDate} - {t.deathDate}</p>
             </Link>
-            <p className="text-sm text-gray-500">
-              {t.birthDate} – {t.deathDate}
-            </p>
-            <p className="mt-2 text-gray-700 line-clamp-3">{t.obituary}</p>
           </li>
         ))}
       </ul>
-    </div>
+    </main>
   );
 }

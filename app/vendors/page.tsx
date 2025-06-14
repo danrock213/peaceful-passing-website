@@ -1,41 +1,112 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { vendorCategories } from '@/data/vendors';
+import { vendors } from '@/data/vendors';
+import { haversineDistance } from '@/lib/geoUtils';
+import { geocodeCity } from '@/lib/geocode';
+import { useDebounce } from '@/lib/useDebounce';
 import Link from 'next/link';
 import Image from 'next/image';
-import { vendorCategories } from '@/data/vendors';
-import { getCategoryLabel } from '@/lib/vendorUtils';
 
 export default function VendorMarketplacePage() {
+  const [city, setCity] = useState('');
+  const debouncedCity = useDebounce(city, 500);
+
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [radius, setRadius] = useState(75);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!debouncedCity) return;
+
+    async function fetchCoords() {
+      setLoading(true);
+      setError('');
+      try {
+        const coords = await geocodeCity(debouncedCity);
+        if (!coords) {
+          setError('Could not find that location. Please try again.');
+          setUserCoords(null);
+        } else {
+          setUserCoords(coords);
+          setRadius(75); // Reset search radius
+        }
+      } catch (err) {
+        setError('An error occurred while looking up that location.');
+        setUserCoords(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCoords();
+  }, [debouncedCity]);
+
+  function vendorsNearby(categoryId: string) {
+    if (!userCoords) return true;
+
+    const vendorsInCategory = vendors.filter((v) => v.category === categoryId);
+    const nearby = vendorsInCategory.filter(
+      (v) =>
+        v.lat &&
+        v.lng &&
+        haversineDistance(userCoords.lat, userCoords.lng, v.lat, v.lng) <= radius
+    );
+
+    if (nearby.length > 0) return true;
+
+    const fallback = vendorsInCategory.filter(
+      (v) =>
+        v.lat &&
+        v.lng &&
+        haversineDistance(userCoords.lat, userCoords.lng, v.lat, v.lng) <= 150
+    );
+
+    if (fallback.length > 0) {
+      setRadius(150);
+      return true;
+    }
+
+    return false;
+  }
+
   return (
     <main className="max-w-6xl mx-auto p-6">
-      <h1 className="text-4xl font-bold text-[#1D3557] mb-8 text-center">Explore Vendor Categories</h1>
+      <h1 className="text-4xl font-bold text-[#1D3557] mb-6 text-center">Explore Vendor Categories</h1>
+
+      <form className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Enter your city..."
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="border p-2 rounded w-full sm:w-64"
+        />
+      </form>
+
+      {loading && <p className="text-center text-gray-500 mb-4">Searching nearby vendors...</p>}
+      {error && <p className="text-center text-red-600 mb-4">{error}</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {vendorCategories.map((category) => (
-          <Link
-            key={category.id}
-            href={`/vendors/${category.id}`}
-            className="block rounded-lg shadow hover:shadow-lg transition overflow-hidden border border-gray-200 bg-white"
-          >
-            <div className="relative w-full h-48">
-              <Image
-                src={category.imageUrl}
-                alt={getCategoryLabel(category.id)}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
-              />
-            </div>
-            <div className="p-4">
-              <h2 className="text-xl font-semibold text-[#1D3557] mb-1">
-                {getCategoryLabel(category.id)}
-              </h2>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {category.description}
-              </p>
-            </div>
-          </Link>
-        ))}
+        {vendorCategories
+          .filter((cat) => vendorsNearby(cat.id))
+          .map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/vendors/${cat.id}`}
+              className="block border rounded shadow hover:shadow-lg transition"
+            >
+              <div className="relative w-full h-48">
+                <Image src={cat.imageUrl} alt={cat.name} fill className="object-cover" />
+              </div>
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-[#1D3557]">{cat.name}</h2>
+                <p className="text-sm text-gray-600 line-clamp-2">{cat.description}</p>
+              </div>
+            </Link>
+          ))}
       </div>
     </main>
   );
