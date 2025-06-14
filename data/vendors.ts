@@ -1,44 +1,108 @@
-export const vendorCategories = [
+import { Vendor, VendorCategory } from '@/types/vendor';
+
+export interface VendorCategory {
+  id: string;
+  name: string;
+  imageUrl: string;
+  description: string;
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  location: string;
+  lat?: number;
+  lng?: number;
+  phone?: string;
+  website?: string;
+  imageUrl?: string;
+  description?: string;
+}
+
+// Vendor categories with images from /images/categories
+export const vendorCategories: VendorCategory[] = [
   {
     id: 'funeral-homes',
     name: 'Funeral Homes',
-    description: 'Trusted funeral service providers for every need.',
-    imageUrl: '/images/categories/funeral-homes.png',
+    imageUrl: '/images/categories/funeral-home.png',
+    description: 'Compassionate funeral homes to guide your arrangements.',
   },
   {
     id: 'crematoriums',
     name: 'Crematoriums',
-    description: 'Compassionate cremation services.',
-    imageUrl: '/images/categories/crematoriums.png',
+    imageUrl: '/images/categories/crematorium.png',
+    description: 'Trusted crematorium services for respectful care.',
   },
   {
     id: 'florists',
     name: 'Florists',
-    description: 'Beautiful floral arrangements for ceremonies and memorials.',
-    imageUrl: '/images/categories/florists.png',
+    imageUrl: '/images/categories/florist.png',
+    description: 'Beautiful floral arrangements for every tribute.',
   },
   {
     id: 'grief-counselors',
     name: 'Grief Counselors',
-    description: 'Supportive professionals for emotional healing.',
-    imageUrl: '/images/categories/grief-counselors.png',
+    imageUrl: '/images/categories/grief-counselor.png',
+    description: 'Professional support during difficult times.',
   },
   {
     id: 'estate-lawyers',
     name: 'Estate Lawyers',
-    description: 'Legal guidance for wills, estates, and probate.',
-    imageUrl: '/images/categories/estate-lawyers.png',
+    imageUrl: '/images/categories/estate-lawyer.png',
+    description: 'Legal assistance with estate and will planning.',
   },
   {
     id: 'memorial-products',
-    name: 'Memorial Product Providers',
-    description: 'Keepsakes and urns to remember loved ones.',
-    imageUrl: '/images/categories/memorial-products.png',
+    name: 'Memorial Products',
+    imageUrl: '/images/categories/memorial-product.png',
+    description: 'Custom memorial keepsakes and products.',
   },
   {
     id: 'event-venues',
     name: 'Event Venues',
-    description: 'Spaces for memorials and remembrance ceremonies.',
-    imageUrl: '/images/categories/event-venues.png',
+    imageUrl: '/images/categories/event-venue.png',
+    description: 'Beautiful venues for memorial services and gatherings.',
   },
+];
+
+// Sample vendors with images from /images/vendors
+export const vendors: Vendor[] = [
+  {
+    id: 'sunset-funeral-home',
+    name: 'Sunset Funeral Home',
+    category: 'funeral-homes',
+    location: 'New York, NY',
+    lat: 40.7128,
+    lng: -74.006,
+    phone: '212-555-1234',
+    website: 'https://sunsetfuneralhome.com',
+    imageUrl: '/images/vendors/sunset-funeral-home.png',
+    description: 'Providing compassionate funeral services in New York.',
+  },
+  {
+    id: 'green-park-crematorium',
+    name: 'Green Park Crematorium',
+    category: 'crematoriums',
+    location: 'Brooklyn, NY',
+    lat: 40.6782,
+    lng: -73.9442,
+    phone: '718-555-5678',
+    website: 'https://greenparkcrematorium.com',
+    imageUrl: '/images/vendors/green-park-crematorium.png',
+    description: 'Trusted cremation services in Brooklyn area.',
+  },
+  {
+    id: 'bloom-florist',
+    name: 'Bloom Florist',
+    category: 'florists',
+    location: 'Queens, NY',
+    lat: 40.7282,
+    lng: -73.7949,
+    phone: '718-555-9012',
+    website: 'https://bloomflorist.com',
+    imageUrl: '/images/vendors/bloom-florist.png',
+    description: 'Fresh flower arrangements for every occasion.',
+  },
+  // add more vendors as needed
 ];
