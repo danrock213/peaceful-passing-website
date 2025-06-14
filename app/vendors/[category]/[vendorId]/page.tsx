@@ -10,7 +10,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import StarRatingInput from '@/components/StarRatingInput';
 import StarRatingDisplay from '@/components/StarRatingDisplay';
 
-import { Review, Message } from '@/types/vendor'; // ✅ Shared type import
+import { Review, Message } from '@/types/vendor';
 
 export default function VendorDetailPage() {
   const { category, vendorId } = useParams();
@@ -18,15 +18,8 @@ export default function VendorDetailPage() {
 
   const vendor = vendors.find((v) => v.category === category && v.id === vendorId);
 
-  const [reviews, setReviews] = useLocalStorage<Record<string, Review[]>>(
-    'vendorReviews',
-    {}
-  );
-
-  const [messages, setMessages] = useLocalStorage<Record<string, Message[]>>(
-    'vendorMessages',
-    {}
-  );
+  const [reviews, setReviews] = useLocalStorage<Record<string, Review[]>>('vendorReviews', {});
+  const [messages, setMessages] = useLocalStorage<Record<string, Message[]>>('vendorMessages', {});
 
   const isSignedIn = true; // Replace with real auth
   const userName = 'DemoUser'; // Replace with real user
@@ -42,7 +35,9 @@ export default function VendorDetailPage() {
     );
   }
 
-  const vendorReviews = reviews[vendorId] || [];
+  const vendorReviews = [...(reviews[vendorId] || [])].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
   const vendorMessages = messages[vendorId] || [];
 
   const [rating, setRating] = useState(5);
@@ -117,6 +112,15 @@ export default function VendorDetailPage() {
     alert('Message sent successfully!');
   }
 
+  const averageRating =
+    vendorReviews.length > 0
+      ? vendorReviews.reduce((sum, r) => sum + r.rating, 0) / vendorReviews.length
+      : null;
+
+  const recentUserMessages = vendorMessages
+    .filter((msg) => msg.sender === userName)
+    .slice(0, 3);
+
   return (
     <main className="max-w-4xl mx-auto p-6">
       <Link href={`/vendors/${category}`} className="text-blue-600 underline mb-4 inline-block">
@@ -124,6 +128,13 @@ export default function VendorDetailPage() {
       </Link>
 
       <h1 className="text-4xl font-bold text-[#1D3557] mb-4">{vendor.name}</h1>
+
+      {averageRating !== null && (
+        <div className="text-yellow-600 mb-4">
+          <StarRatingDisplay rating={averageRating} size={16} />{' '}
+          {averageRating.toFixed(1)} ({vendorReviews.length} reviews)
+        </div>
+      )}
 
       <div className="flex gap-4 overflow-x-auto mb-6">
         {vendor.images?.length ? (
@@ -174,6 +185,26 @@ export default function VendorDetailPage() {
             >
               Send Message
             </button>
+
+            {recentUserMessages.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-2">Your Recent Messages</h3>
+                <ul className="space-y-2">
+                  {recentUserMessages.map((msg) => (
+                    <li key={msg.id} className="border p-2 rounded bg-white text-sm text-gray-700">
+                      <p className="whitespace-pre-line">{msg.content}</p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {new Date(msg.date).toLocaleDateString()} at{' '}
+                        {new Date(msg.date).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           <p><Link href="/sign-in" className="text-blue-600 underline">Sign in</Link> to message this vendor.</p>
