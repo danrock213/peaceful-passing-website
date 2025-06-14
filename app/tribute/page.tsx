@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/authContext';
+import SearchBar from '@/components/SearchBar';
 import { useRouter } from 'next/navigation';
 
 export interface Tribute {
@@ -29,7 +30,7 @@ export default function TributeListPage() {
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreateClick = () => {
+  const handleNewTribute = () => {
     if (user) {
       router.push('/tribute/create');
     } else {
@@ -42,19 +43,15 @@ export default function TributeListPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[#1D3557]">Tribute Pages</h1>
         <button
-          onClick={handleCreateClick}
+          onClick={handleNewTribute}
           className="bg-[#1D3557] text-white px-4 py-2 rounded hover:bg-[#F4A261] hover:text-[#1D3557]"
         >
-          + New Tribute
+          + Create Tribute Page
         </button>
       </div>
-      <input
-        type="text"
-        placeholder="Search by name..."
-        className="w-full border px-4 py-2 rounded mb-4"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+
+      <SearchBar search={search} setSearch={setSearch} placeholder="Search by name..." />
+
       <ul className="space-y-4">
         {filtered.map((t) => (
           <li key={t.id} className="border p-4 rounded shadow bg-white">

@@ -10,6 +10,8 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import StarRatingInput from '@/components/StarRatingInput';
 import StarRatingDisplay from '@/components/StarRatingDisplay';
 
+import { Review, Message } from '@/types/vendor'; // ✅ Shared type import
+
 export default function VendorDetailPage() {
   const { category, vendorId } = useParams();
   const router = useRouter();
@@ -124,11 +126,19 @@ export default function VendorDetailPage() {
       <h1 className="text-4xl font-bold text-[#1D3557] mb-4">{vendor.name}</h1>
 
       <div className="flex gap-4 overflow-x-auto mb-6">
-        {vendor.images?.map((img, idx) => (
-          <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
-            <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
+        {vendor.images?.length ? (
+          vendor.images.map((img, idx) => (
+            <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
+              <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
+            </div>
+          ))
+        ) : vendor.imageUrl ? (
+          <div className="relative w-64 h-40 rounded overflow-hidden shadow">
+            <Image src={vendor.imageUrl} alt={`${vendor.name}`} fill className="object-cover" />
           </div>
-        ))}
+        ) : (
+          <p className="text-gray-500">No image available</p>
+        )}
       </div>
 
       <p className="mb-6 text-gray-700 whitespace-pre-line">{vendor.description}</p>
@@ -207,7 +217,9 @@ export default function VendorDetailPage() {
           {vendorReviews.length === 0 && <li>No reviews yet.</li>}
           {vendorReviews.map((rev) => (
             <li key={rev.id} className="mb-4 border-b pb-2">
-              <p className="font-semibold">{rev.author} <StarRatingDisplay rating={rev.rating} size={16} /></p>
+              <p className="font-semibold">
+                {rev.author} <StarRatingDisplay rating={rev.rating} size={16} />
+              </p>
               <p className="text-gray-700 whitespace-pre-line">{rev.comment}</p>
               <p className="text-gray-500 text-sm">{new Date(rev.date).toLocaleDateString()}</p>
             </li>
@@ -217,20 +229,3 @@ export default function VendorDetailPage() {
     </main>
   );
 }
-
-// Types
-
-type Review = {
-  id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
-};
-
-type Message = {
-  id: string;
-  sender: string;
-  content: string;
-  date: string;
-};
