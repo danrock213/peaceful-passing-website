@@ -1,10 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/vendors/[category]/page": "app/vendors/[category]/page.js",
-  "/vendors/[category]/[vendorId]/page": "app/vendors/[category]/[vendorId]/page.js",
-  "/checklist/page": "app/checklist/page.js",
-  "/messages/page": "app/messages/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/vendors/page": "app/vendors/page.js"
+  "/(routes)/page": "app/(routes)/page.js",
+  "/(routes)/vendors/page": "app/(routes)/vendors/page.js",
+  "/(routes)/vendors/[category]/[vendorId]/page": "app/(routes)/vendors/[category]/[vendorId]/page.js",
+  "/(routes)/vendors/[category]/page": "app/(routes)/vendors/[category]/page.js"
 }
