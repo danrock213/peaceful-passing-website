@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { vendors } from '@/data/vendors';
 import Image from 'next/image';
@@ -10,13 +10,16 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import StarRatingInput from '@/components/StarRatingInput';
 import StarRatingDisplay from '@/components/StarRatingDisplay';
 
-import { Review, Message } from '@/types/vendor';
+import type { Review, Message } from '@/types/vendor';
 
 export default function VendorDetailPage() {
-  const { category, vendorId } = useParams();
+  const { category, vendorId } = useParams() as { category: string; vendorId: string };
   const router = useRouter();
 
-  const vendor = vendors.find((v) => v.category === category && v.id === vendorId);
+  const vendor = useMemo(
+    () => vendors.find((v) => v.category === category && v.id === vendorId),
+    [category, vendorId]
+  );
 
   const [reviews, setReviews] = useLocalStorage<Record<string, Review[]>>('vendorReviews', {});
   const [messages, setMessages] = useLocalStorage<Record<string, Message[]>>('vendorMessages', {});
@@ -24,41 +27,42 @@ export default function VendorDetailPage() {
   const isSignedIn = true; // Replace with real auth
   const userName = 'DemoUser'; // Replace with real user
 
-  if (!vendor) {
-    return (
-      <main className="max-w-4xl mx-auto p-6">
-        <p className="text-red-600">Vendor not found.</p>
-        <Link href={`/vendors/${category}`} className="text-blue-600 underline">
-          Back to {getCategoryLabel(category)}
-        </Link>
-      </main>
-    );
-  }
-
-  const vendorReviews = [...(reviews[vendorId] || [])].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  const vendorReviews = useMemo(
+    () =>
+      [...(reviews[vendorId] || [])].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ),
+    [reviews, vendorId]
   );
+
   const vendorMessages = messages[vendorId] || [];
+  const recentUserMessages = vendorMessages.filter((msg) => msg.sender === userName).slice(0, 3);
 
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
-  const [error, setError] = useState('');
+  const [reviewError, setReviewError] = useState('');
 
   const [messageText, setMessageText] = useState('');
   const [messageError, setMessageError] = useState('');
 
-  function handleSubmitReview() {
+  const averageRating = useMemo(() => {
+    if (vendorReviews.length === 0) return null;
+    const total = vendorReviews.reduce((sum, r) => sum + r.rating, 0);
+    return total / vendorReviews.length;
+  }, [vendorReviews]);
+
+  const handleSubmitReview = () => {
     if (!isSignedIn) {
       router.push('/sign-in');
       return;
     }
 
     if (rating < 1 || rating > 5) {
-      setError('Rating must be between 1 and 5');
+      setReviewError('Rating must be between 1 and 5');
       return;
     }
     if (!reviewText.trim()) {
-      setError('Please enter a review message');
+      setReviewError('Please enter a review message');
       return;
     }
 
@@ -70,19 +74,17 @@ export default function VendorDetailPage() {
       date: new Date().toISOString(),
     };
 
-    const updatedVendorReviews = [newReview, ...vendorReviews];
-
     setReviews({
       ...reviews,
-      [vendorId]: updatedVendorReviews,
+      [vendorId]: [newReview, ...vendorReviews],
     });
 
     setRating(5);
     setReviewText('');
-    setError('');
-  }
+    setReviewError('');
+  };
 
-  function handleSubmitMessage() {
+  const handleSubmitMessage = () => {
     if (!isSignedIn) {
       router.push('/sign-in');
       return;
@@ -100,26 +102,26 @@ export default function VendorDetailPage() {
       date: new Date().toISOString(),
     };
 
-    const updatedVendorMessages = [newMessage, ...vendorMessages];
-
     setMessages({
       ...messages,
-      [vendorId]: updatedVendorMessages,
+      [vendorId]: [newMessage, ...vendorMessages],
     });
 
     setMessageText('');
     setMessageError('');
     alert('Message sent successfully!');
+  };
+
+  if (!vendor) {
+    return (
+      <main className="max-w-4xl mx-auto p-6">
+        <p className="text-red-600">Vendor not found.</p>
+        <Link href={`/vendors/${category}`} className="text-blue-600 underline">
+          Back to {getCategoryLabel(category)}
+        </Link>
+      </main>
+    );
   }
-
-  const averageRating =
-    vendorReviews.length > 0
-      ? vendorReviews.reduce((sum, r) => sum + r.rating, 0) / vendorReviews.length
-      : null;
-
-  const recentUserMessages = vendorMessages
-    .filter((msg) => msg.sender === userName)
-    .slice(0, 3);
 
   return (
     <main className="max-w-4xl mx-auto p-6">
@@ -139,13 +141,26 @@ export default function VendorDetailPage() {
       <div className="flex gap-4 overflow-x-auto mb-6">
         {vendor.images?.length ? (
           vendor.images.map((img, idx) => (
-            <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
-              <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
+            <div
+              key={idx}
+              className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow"
+            >
+              <Image
+                src={img}
+                alt={`${vendor.name} image ${idx + 1}`}
+                fill
+                className="object-cover"
+              />
             </div>
           ))
         ) : vendor.imageUrl ? (
           <div className="relative w-64 h-40 rounded overflow-hidden shadow">
-            <Image src={vendor.imageUrl} alt={`${vendor.name}`} fill className="object-cover" />
+            <Image
+              src={vendor.imageUrl}
+              alt={`${vendor.name}`}
+              fill
+              className="object-cover"
+            />
           </div>
         ) : (
           <p className="text-gray-500">No image available</p>
@@ -155,19 +170,41 @@ export default function VendorDetailPage() {
       <p className="mb-6 text-gray-700 whitespace-pre-line">{vendor.description}</p>
 
       <div className="mb-6 space-y-1 text-gray-800">
-        <p><strong>Location:</strong> {vendor.location}</p>
+        <p>
+          <strong>Location:</strong> {vendor.location}
+        </p>
         {vendor.phone && (
-          <p><strong>Phone:</strong> <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">{vendor.phone}</a></p>
+          <p>
+            <strong>Phone:</strong>{' '}
+            <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">
+              {vendor.phone}
+            </a>
+          </p>
         )}
         {vendor.email && (
-          <p><strong>Email:</strong> <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">{vendor.email}</a></p>
+          <p>
+            <strong>Email:</strong>{' '}
+            <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">
+              {vendor.email}
+            </a>
+          </p>
         )}
         {vendor.website && (
-          <p><strong>Website:</strong> <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{vendor.website}</a></p>
+          <p>
+            <strong>Website:</strong>{' '}
+            <a
+              href={vendor.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              {vendor.website}
+            </a>
+          </p>
         )}
       </div>
 
-      <div className="mb-8">
+      <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2">Send a Message</h2>
         {isSignedIn ? (
           <div className="p-4 border rounded bg-gray-50">
@@ -191,7 +228,10 @@ export default function VendorDetailPage() {
                 <h3 className="text-lg font-semibold mb-2">Your Recent Messages</h3>
                 <ul className="space-y-2">
                   {recentUserMessages.map((msg) => (
-                    <li key={msg.id} className="border p-2 rounded bg-white text-sm text-gray-700">
+                    <li
+                      key={msg.id}
+                      className="border p-2 rounded bg-white text-sm text-gray-700"
+                    >
                       <p className="whitespace-pre-line">{msg.content}</p>
                       <p className="text-gray-400 text-xs mt-1">
                         {new Date(msg.date).toLocaleDateString()} at{' '}
@@ -207,9 +247,14 @@ export default function VendorDetailPage() {
             )}
           </div>
         ) : (
-          <p><Link href="/sign-in" className="text-blue-600 underline">Sign in</Link> to message this vendor.</p>
+          <p>
+            <Link href="/sign-in" className="text-blue-600 underline">
+              Sign in
+            </Link>{' '}
+            to message this vendor.
+          </p>
         )}
-      </div>
+      </section>
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Reviews ({vendorReviews.length})</h2>
@@ -228,7 +273,7 @@ export default function VendorDetailPage() {
                 className="w-full border rounded p-2"
               />
 
-              {error && <p className="text-red-600 mt-2">{error}</p>}
+              {reviewError && <p className="text-red-600 mt-2">{reviewError}</p>}
 
               <button
                 onClick={handleSubmitReview}
@@ -239,7 +284,10 @@ export default function VendorDetailPage() {
             </>
           ) : (
             <p>
-              <Link href="/sign-in" className="text-blue-600 underline">Sign in</Link> to post a review.
+              <Link href="/sign-in" className="text-blue-600 underline">
+                Sign in
+              </Link>{' '}
+              to post a review.
             </p>
           )}
         </div>
