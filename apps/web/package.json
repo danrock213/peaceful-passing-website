@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "biome lint .",
     "format": "biome format .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "vercel-build": "pnpm install --frozen-lockfile && pnpm build"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.1.0",
