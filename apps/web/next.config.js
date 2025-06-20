@@ -2,8 +2,10 @@ const path = require("path");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
+  reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    domains: [],
   },
   async headers() {
     return [
@@ -18,12 +20,6 @@ const nextConfig = {
       },
     ];
   },
-  images: {
-    formats: ["image/avif", "image/webp"],
-    domains: [], // Add your image domains here
-  },
-  reactStrictMode: true,
-  swcMinify: true,
   webpack(config) {
     config.resolve.alias["@"] = path.resolve(__dirname);
     return config;
