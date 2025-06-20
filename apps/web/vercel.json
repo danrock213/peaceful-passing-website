@@ -1,0 +1,10 @@
+{
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": ".next",
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}
