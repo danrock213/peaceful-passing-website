@@ -29,6 +29,8 @@
     "@biomejs/biome": "^1.9.4",
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
+    "@types/node": "^24.0.3",
+    "@types/react": "^19.1.8",
     "husky": "^9.1.7",
     "postcss": "^8.5.1",
     "typescript": "^5.8.3"
