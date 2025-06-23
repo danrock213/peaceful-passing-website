@@ -1,6 +1,7 @@
 {
   "name": "starlit-passage",
   "private": true,
+  "packageManager": "pnpm@9.5.0",
   "scripts": {
     "changeset": "changeset",
     "publish:packages": "changeset publish",
@@ -13,7 +14,7 @@
     "lint:fix": "turbo lint --continue -- --apply",
     "clean": "turbo clean",
     "release": "turbo run release",
-    "prepare": "echo skipping husky in CI",
+    "prepare": "husky install",
     "typecheck": "turbo typecheck"
   },
   "dependencies": {
@@ -63,13 +64,20 @@
     }
   },
   "pnpm": {
-    "overrides": {
-      "@ai-sdk/provider": "1.1.3",
-      "@types/react": "18.2.46",
-      "@types/react-dom": "18.2.17",
-      "inotify": "npm:0.0.0-empty",
-      "fsevents": "npm:0.0.0-empty"
-    }
+  "overrides": {
+    "@ai-sdk/provider": "1.1.3",
+    "@types/react": "18.2.46",
+    "@types/react-dom": "18.2.17",
+    "inotify": "npm:0.0.0-empty@1.0.0",
+    "fsevents": "npm:0.0.0-empty@1.0.0"
   },
-  "packageManager": "pnpm@9.5.0"
+  "packageExtensions": {
+    "*": {
+      "peerDependencies": {
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0"
+        }
+      }
+    }
+  }
 }
