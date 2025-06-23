@@ -13,7 +13,7 @@
     "lint:fix": "turbo lint --continue -- --apply",
     "clean": "turbo clean",
     "release": "turbo run release",
-    "prepare": "test \"$CI\" = \"true\" || npx husky install",
+    "prepare": "npx husky install",
     "typecheck": "turbo typecheck"
   },
   "dependencies": {
@@ -30,7 +30,7 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@types/node": "^24.0.3",
-    "@types/react": "^18.2.46",
+    "@types/react": "18.2.46",
     "@types/react-dom": "18.2.17",
     "husky": "^9.1.7",
     "postcss": "^8.5.1",
