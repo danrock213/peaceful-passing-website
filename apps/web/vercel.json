@@ -4,7 +4,8 @@
   "outputDirectory": ".next",
   "build": {
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "NODE_VERSION": "18"
     }
   }
 }
