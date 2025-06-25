@@ -16,13 +16,13 @@
     "jsx": "preserve",
     "incremental": true,
 
-    // ✅ Ensures imports like @/components/... resolve correctly
-    "baseUrl": ".",
+    // ✅ Ensures imports like @/components/... resolve correctly from apps/web
+    "baseUrl": "./",
     "paths": {
       "@/*": ["./*"]
     },
 
-    // ✅ Adds Next.js plugin support for App Router
+    // ✅ Enables Next.js plugin support
     "plugins": [{ "name": "next" }]
   },
   "include": [
