@@ -1,4 +1,3 @@
-// apps/web/middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { authMiddleware } from '@clerk/nextjs/server';
@@ -16,11 +15,11 @@ export default authMiddleware({
     '/reviews',
   ],
   afterAuth(auth, req) {
-    const { userId, user } = auth;
+    const { userId } = auth;
     const url = req.nextUrl.clone();
 
+    // If not signed in, redirect away from protected routes
     if (!userId) {
-      // Block access to protected routes if not signed in
       if (
         url.pathname.startsWith('/dashboard') ||
         url.pathname.startsWith('/admin') ||
@@ -33,23 +32,7 @@ export default authMiddleware({
       return NextResponse.next();
     }
 
-    const role = user?.publicMetadata?.role;
-
-    // Block users without correct role
-    if (url.pathname.startsWith('/admin') && role !== 'admin') {
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-
-    if (
-      (url.pathname.startsWith('/vendor/dashboard') ||
-        url.pathname.startsWith('/vendor-profile')) &&
-      role !== 'vendor'
-    ) {
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-
+    // Do NOT access user.publicMetadata here — move that logic to server/page components
     return NextResponse.next();
   },
 });
