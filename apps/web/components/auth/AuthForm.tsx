@@ -17,15 +17,19 @@ export default function AuthForm({ mode, userType }: AuthFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to API or logic
+    // TODO: Connect to Clerk or Supabase auth logic here
     console.log({ email, password, mode, userType });
   };
+
+  const toggleAuthUrl = isSignIn ? '/sign-up' : '/sign-in';
+  const toggleLinkLabel = isSignIn ? 'Sign Up' : 'Sign In';
 
   return (
     <>
       <h1 className="text-2xl font-bold text-center text-[#1D3557] mb-4">
         {isSignIn ? 'Sign In' : 'Sign Up'} as {isUser ? 'User' : 'Vendor'}
       </h1>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -62,20 +66,20 @@ export default function AuthForm({ mode, userType }: AuthFormProps) {
           <>
             Don't have an account?{' '}
             <Link
-              href={`/${userType === 'user' ? 'sign-up' : 'vendor-sign-up'}`}
+              href={`${toggleAuthUrl}?userType=${userType}`}
               className="text-[#1D3557] hover:underline"
             >
-              Sign Up
+              {toggleLinkLabel}
             </Link>
           </>
         ) : (
           <>
             Already have an account?{' '}
             <Link
-              href={`/${userType === 'user' ? 'user-auth' : 'vendor-auth'}`}
+              href={`${toggleAuthUrl}?userType=${userType}`}
               className="text-[#1D3557] hover:underline"
             >
-              Sign In
+              {toggleLinkLabel}
             </Link>
           </>
         )}
