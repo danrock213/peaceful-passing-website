@@ -17,16 +17,14 @@ interface Vendor {
   images?: string[] | null;
 }
 
-interface PageProps {
-  params: {
-    category: string;
-    vendorId: string;
-  };
-}
-
 export default async function VendorDetailPage({
-  params: { category, vendorId },
-}: PageProps) {
+  params,
+}: {
+  params: { category: string | string[]; vendorId: string | string[] };
+}) {
+  const category = Array.isArray(params.category) ? params.category[0] : params.category;
+  const vendorId = Array.isArray(params.vendorId) ? params.vendorId[0] : params.vendorId;
+
   const { data: vendor, error } = await supabase
     .from<Vendor>('vendors')
     .select('*')
