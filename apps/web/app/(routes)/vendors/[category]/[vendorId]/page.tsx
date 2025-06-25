@@ -1,5 +1,4 @@
-// app/(routes)/vendors/[category]/[vendorId]/page.tsx
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getCategoryLabel } from '@/lib/vendorUtils';
@@ -23,11 +22,10 @@ interface Props {
 }
 
 export default async function VendorDetailPage({ params }: Props) {
-  const supabase = createClient();
   const { category, vendorId } = params;
 
   const { data: vendor, error } = await supabase
-    .from('vendors')
+    .from<Vendor>('vendors')
     .select('*')
     .eq('id', vendorId)
     .eq('category', category)
@@ -73,9 +71,35 @@ export default async function VendorDetailPage({ params }: Props) {
 
       <div className="mb-6 space-y-1 text-gray-800">
         {vendor.location && <p><strong>Location:</strong> {vendor.location}</p>}
-        {vendor.phone && <p><strong>Phone:</strong> <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">{vendor.phone}</a></p>}
-        {vendor.email && <p><strong>Email:</strong> <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">{vendor.email}</a></p>}
-        {vendor.website && <p><strong>Website:</strong> <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{vendor.website}</a></p>}
+        {vendor.phone && (
+          <p>
+            <strong>Phone:</strong>{' '}
+            <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">
+              {vendor.phone}
+            </a>
+          </p>
+        )}
+        {vendor.email && (
+          <p>
+            <strong>Email:</strong>{' '}
+            <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">
+              {vendor.email}
+            </a>
+          </p>
+        )}
+        {vendor.website && (
+          <p>
+            <strong>Website:</strong>{' '}
+            <a
+              href={vendor.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              {vendor.website}
+            </a>
+          </p>
+        )}
       </div>
 
       <VendorInteractions vendorId={vendor.id} />
