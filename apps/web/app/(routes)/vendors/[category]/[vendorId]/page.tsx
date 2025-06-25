@@ -17,16 +17,13 @@ interface Vendor {
   images?: string[] | null;
 }
 
-type PageProps = {
-  params: {
-    category: string | string[];
-    vendorId: string | string[];
-  };
-};
-
-export default async function VendorDetailPage({ params }: PageProps) {
-  const category = Array.isArray(params.category) ? params.category[0] : params.category;
-  const vendorId = Array.isArray(params.vendorId) ? params.vendorId[0] : params.vendorId;
+// Correct typing to match Next.js App Router expectations
+export default async function VendorDetailPage({
+  params,
+}: {
+  params: Record<'category' | 'vendorId', string>;
+}) {
+  const { category, vendorId } = params;
 
   const { data: vendor, error } = await supabase
     .from<Vendor>('vendors')
@@ -49,7 +46,10 @@ export default async function VendorDetailPage({ params }: PageProps) {
 
   return (
     <main className="max-w-4xl mx-auto p-6">
-      <Link href={`/vendors/${category}`} className="text-blue-600 underline mb-4 inline-block">
+      <Link
+        href={`/vendors/${category}`}
+        className="text-blue-600 underline mb-4 inline-block"
+      >
         &larr; Back to {getCategoryLabel(category)}
       </Link>
 
