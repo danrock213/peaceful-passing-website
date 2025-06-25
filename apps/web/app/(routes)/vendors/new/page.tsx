@@ -1,11 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import VendorLocationForm from '@/components/VendorLocationForm';
 
 export default function AddVendorPage() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
+  const { user, isLoaded } = useUser();
+
   const [form, setForm] = useState({
     name: '',
     category: 'funeral-homes',
@@ -19,53 +24,78 @@ export default function AddVendorPage() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Redirect if user is not a vendor or not signed in
+  useEffect(() => {
+    if (isLoaded) {
+      if (!user) {
+        router.push('/sign-in');
+      } else if (user.publicMetadata?.role !== 'vendor') {
+        alert('Only vendors can add new vendor profiles.');
+        router.push('/');
+      }
+    }
+  }, [user, isLoaded, router]);
 
   const handleLocationSave = (location: string, lat: number, lng: number) => {
     setForm((f) => ({ ...f, location, lat, lng }));
   };
 
-const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-) => {
-  const { name, value, type } = e.target;
-
-  if (type === 'checkbox') {
-    const target = e.target as HTMLInputElement; // Narrow type for checkbox
-    setForm((f) => ({
-      ...f,
-      [name]: target.checked,
-    }));
-  } else {
-    setForm((f) => ({
-      ...f,
-      [name]: value,
-    }));
-  }
-};
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const target = e.target as HTMLInputElement;
+      setForm((f) => ({ ...f, [name]: target.checked }));
+    } else {
+      setForm((f) => ({ ...f, [name]: value }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError(null);
 
-    await fetch('/api/vendors', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+    if (!user) {
+      setError('You must be signed in.');
+      setSaving(false);
+      return;
+    }
+
+    const { data, error: supabaseError } = await supabase.from('vendors').insert({
+      ...form,
+      created_by: user.id,
+      approved: false, // always start unapproved; admin approves later
     });
 
     setSaving(false);
-    router.push('/vendors/pending'); // where you later approve
+
+    if (supabaseError) {
+      setError(supabaseError.message);
+      return;
+    }
+
+    router.push('/vendors/pending');
   };
 
   return (
     <main className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Add / Edit Vendor</h1>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Basic info */}
         {['name', 'phone', 'website'].map((field) => (
           <div key={field}>
-            <label className="block text-sm font-medium">{field[0].toUpperCase() + field.slice(1)}</label>
+            <label className="block text-sm font-medium">
+              {field[0].toUpperCase() + field.slice(1)}
+            </label>
             <input
               name={field}
               type={field === 'phone' ? 'tel' : 'text'}
@@ -80,13 +110,24 @@ const handleChange = (
         {/* Category */}
         <div>
           <label className="block text-sm font-medium">Category</label>
-          <select name="category" value={form.category} onChange={handleChange} className="w-full border p-2 rounded">
+          <select
+            name="category"
+            value={form.category}
+            onChange={handleChange}
+            className="w-full border p-2 rounded"
+          >
             {[
-              'funeral-homes', 'crematoriums', 'florists',
-              'grief-counselors', 'estate-lawyers',
-              'memorial-products', 'event-venues'
+              'funeral-homes',
+              'crematoriums',
+              'florists',
+              'grief-counselors',
+              'estate-lawyers',
+              'memorial-products',
+              'event-venues',
             ].map((cat) => (
-              <option key={cat} value={cat}>{cat.replace(/-/g, ' ')}</option>
+              <option key={cat} value={cat}>
+                {cat.replace(/-/g, ' ')}
+              </option>
             ))}
           </select>
         </div>
@@ -104,9 +145,12 @@ const handleChange = (
         </div>
 
         {/* Location + Geocode */}
-        <VendorLocationForm initialLocation={form.location} onSave={handleLocationSave} />
+        <VendorLocationForm
+          initialLocation={form.location}
+          onSave={handleLocationSave}
+        />
 
-        {/* Approval toggle */}
+        {/* Approval toggle (usually admins set this; maybe hide?) */}
         <div>
           <label className="inline-flex items-center space-x-2">
             <input
@@ -115,8 +159,11 @@ const handleChange = (
               checked={form.approved}
               onChange={handleChange}
               className="form-checkbox"
+              disabled // disable so vendors can't self-approve
             />
-            <span className="text-sm">Approved (publishes vendor immediately)</span>
+            <span className="text-sm opacity-50">
+              Approved (admins control this)
+            </span>
           </label>
         </div>
 

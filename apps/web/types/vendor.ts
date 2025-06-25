@@ -7,16 +7,17 @@ export interface VendorCategory {
 
 export interface Review {
   id: string;
+  vendor_id: string; // Needed for Supabase table relationships
   author: string;
-  rating: number; // e.g., 1 to 5 stars
+  rating: number; // 1 to 5 stars
   comment: string;
-  date: string; // ISO date string
+  date: string; // ISO 8601 timestamp
 }
 
 export interface Vendor {
   id: string;
   name: string;
-  category: string; // category ID
+  category: string; // category ID (foreign key)
   location: string;
   lat?: number;
   lng?: number;
@@ -24,7 +25,7 @@ export interface Vendor {
   website?: string;
   email?: string;
   imageUrl?: string;
-  images?: (string | File)[];
+  images?: string[]; // File upload URLs (preferably from Supabase storage)
   description?: string;
   hours?: string;
   services?: string[];
@@ -35,7 +36,6 @@ export interface Vendor {
   };
   approved?: boolean;
   updatedAt?: string;
-  reviews?: Review[];
 }
 
 export interface VendorProfile {
@@ -46,12 +46,12 @@ export interface VendorProfile {
   phone?: string;
   address?: string;
   website?: string;
-  categories?: string[];
+  categories?: string[]; // category IDs
   logoUrl?: string;
   createdAt?: string;
   updatedAt?: string;
   bio?: string;
   services?: string[];
   availability?: string;
-  gallery?: string[];
+  gallery?: string[]; // URLs to images
 }

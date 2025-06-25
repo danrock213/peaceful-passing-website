@@ -1,21 +1,40 @@
-'use client';
-
-import { useParams } from 'next/navigation';
+import { createClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import Image from 'next/image';
+import { vendorCategories } from '@/data/vendors';
 
-import { vendors, vendorCategories } from '@/data/vendors';
-import VendorCard from '@/components/vendor/VendorCard'; // OK to leave if it exists
+interface Vendor {
+  id: string;
+  name: string;
+  category: string;
+  location?: string | null;
+  imageUrl?: string | null;
+}
 
-export default function VendorCategoryPage() {
-  const rawParams = useParams();
-  const categoryParam = rawParams?.category;
-  const category = Array.isArray(categoryParam) ? categoryParam[0] : categoryParam;
+interface Props {
+  params: { category: string };
+}
 
-  if (!category) return <p className="p-6">Category not found.</p>;
+export default async function VendorCategoryPage({ params }: Props) {
+  const supabase = createClient();
+
+  const category = params.category;
+  if (!category) {
+    return <p className="p-6">Category not found.</p>;
+  }
 
   const categoryInfo = vendorCategories.find((cat) => cat.id === category);
-  const filteredVendors = vendors.filter((v) => v.category === category);
+
+  const { data: filteredVendors, error } = await supabase
+    .from<Vendor>('vendors')
+    .select('*')
+    .eq('category', category)
+    .eq('approved', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return <p className="p-6 text-red-600">Failed to load vendors: {error.message}</p>;
+  }
 
   return (
     <main className="max-w-6xl mx-auto p-6">
@@ -37,7 +56,7 @@ export default function VendorCategoryPage() {
         </Link>
       )}
 
-      {filteredVendors.length === 0 ? (
+      {!filteredVendors || filteredVendors.length === 0 ? (
         <p>No vendors found in this category.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -46,6 +65,7 @@ export default function VendorCategoryPage() {
               key={vendor.id}
               href={`/vendors/${category}/${vendor.id}`}
               className="group block border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              aria-label={`View details for ${vendor.name}`}
             >
               <div className="relative w-full h-40 bg-gray-100">
                 {vendor.imageUrl ? (

@@ -11,7 +11,7 @@ export default function StarRatingInput({ rating, onChange }: Props) {
   const [hovered, setHovered] = useState(0);
 
   return (
-    <div className="flex space-x-1">
+    <div className="flex space-x-1" role="radiogroup" aria-label="Star rating">
       {[1, 2, 3, 4, 5].map((i) => (
         <button
           key={i}
@@ -20,6 +20,8 @@ export default function StarRatingInput({ rating, onChange }: Props) {
           onMouseEnter={() => setHovered(i)}
           onMouseLeave={() => setHovered(0)}
           className="text-yellow-500"
+          aria-label={`${i} star${i > 1 ? 's' : ''}`}
+          aria-pressed={rating === i}
         >
           <Star
             fill={i <= (hovered || rating) ? 'currentColor' : 'none'}

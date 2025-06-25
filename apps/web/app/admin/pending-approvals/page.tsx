@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
 interface PendingItem {
   id: string;
@@ -12,17 +14,32 @@ interface PendingItem {
 }
 
 export default function PendingApprovalsPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [pendingItems, setPendingItems] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Role check
   useEffect(() => {
-    // Simulate fetching from localStorage or mock data
-    const mockData: PendingItem[] = JSON.parse(
-      localStorage.getItem('pendingApprovals') || '[]'
-    );
-    setPendingItems(mockData);
-    setLoading(false);
-  }, []);
+    if (isLoaded) {
+      if (!user) {
+        router.push('/sign-in');
+      } else if (user.publicMetadata?.role !== 'admin') {
+        alert('Access restricted to admins.');
+        router.push('/');
+      }
+    }
+  }, [user, isLoaded, router]);
+
+  useEffect(() => {
+    if (isLoaded && user?.publicMetadata?.role === 'admin') {
+      const mockData: PendingItem[] = JSON.parse(
+        localStorage.getItem('pendingApprovals') || '[]'
+      );
+      setPendingItems(mockData);
+      setLoading(false);
+    }
+  }, [isLoaded, user]);
 
   const handleApprove = (id: string) => {
     const updated = pendingItems.filter((item) => item.id !== id);
@@ -37,6 +54,10 @@ export default function PendingApprovalsPage() {
     localStorage.setItem('pendingApprovals', JSON.stringify(updated));
     alert('Rejected!');
   };
+
+  if (!user || user.publicMetadata?.role !== 'admin') {
+    return null; // Optionally render a loader here
+  }
 
   return (
     <main className="max-w-4xl mx-auto py-10 px-6">

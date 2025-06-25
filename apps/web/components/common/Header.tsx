@@ -39,17 +39,12 @@ export default function Header() {
           </div>
 
           <div className="flex space-x-8 text-sm font-medium text-[#1D3557] items-center">
-            <Link
-              href="/checklist"
-              className="hover:text-[#F4A261] transition-colors"
-            >
+            <Link href="/checklist" className="hover:text-[#F4A261] transition-colors">
               Checklist
             </Link>
 
             <div className="relative group">
-              <button className="hover:text-[#F4A261] transition-colors">
-                Vendors ▾
-              </button>
+              <button className="hover:text-[#F4A261] transition-colors">Vendors ▾</button>
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <Link href="/vendors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                   All Vendors
@@ -118,7 +113,14 @@ export default function Header() {
             </SignedOut>
 
             <SignedIn>
-              <UserButton afterSignOutUrl="/" />
+              <div className="flex flex-col items-end">
+                <UserButton afterSignOutUrl="/" />
+                {user?.publicMetadata?.role && (
+                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full mt-1 select-none">
+                    Role: {user.publicMetadata.role}
+                  </span>
+                )}
+              </div>
             </SignedIn>
           </div>
 

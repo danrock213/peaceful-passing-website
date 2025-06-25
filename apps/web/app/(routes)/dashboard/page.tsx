@@ -1,26 +1,32 @@
 import { currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import DashboardShell from './DashboardShell';
 import type { Tribute } from '@/types/tribute';
 import type { ChecklistItem, Vendor, Event, Activity } from '@/types/dashboard';
 
 export default async function DashboardPage() {
   const user = await currentUser();
+  if (!user) redirect('/sign-in');
 
-  if (!user) {
-    return (
-      <main className="max-w-2xl mx-auto mt-20 text-center text-gray-500">
-        <p>Please sign in to view your dashboard.</p>
-      </main>
-    );
+  const role = user.publicMetadata?.role || 'user';
+
+  if (role === 'vendor') redirect('/vendors/dashboard');
+  if (role === 'admin') redirect('/admin/dashboard');
+
+  const supabase = createClient();
+
+  // 🎯 Fetch tributes for current user
+  const { data: userTributes, error } = await supabase
+    .from('tributes')
+    .select('*')
+    .eq('created_by', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching tributes:', error.message);
   }
 
-  // Ensure firstName is string or undefined (not null)
-  const firstName = user.firstName ?? undefined;
-
-  // TODO: Replace with real fetch logic (example type assigned)
-  const userTributes: Tribute[] = []; // Explicitly typed empty array
-
-  // Sample checklist typed as ChecklistItem[]
   const checklist: ChecklistItem[] = [
     { id: '1', title: 'Notify family members', dueDate: '2025-06-20', checked: false },
     { id: '2', title: 'Book funeral home', dueDate: '2025-06-22', checked: false },
@@ -48,8 +54,8 @@ export default async function DashboardPage() {
 
   return (
     <DashboardShell
-      firstName={firstName}
-      tributes={userTributes}
+      firstName={user.firstName ?? undefined}
+      tributes={userTributes ?? []}
       checklist={checklist}
       vendors={vendors}
       allVendorTypes={allVendorTypes}

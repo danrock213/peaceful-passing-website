@@ -15,7 +15,11 @@ export default function StarRatingDisplay({ rating, size = 20 }: Props) {
   });
 
   return (
-    <div className="flex items-center gap-1 text-yellow-500">
+    <div
+      className="flex items-center gap-1 text-yellow-500"
+      title={`Rating: ${rating.toFixed(1)} out of 5 stars`}
+      aria-label={`Rating: ${rating.toFixed(1)} out of 5 stars`}
+    >
       {stars.map((type, i) => (
         <Star
           key={i}
@@ -23,6 +27,7 @@ export default function StarRatingDisplay({ rating, size = 20 }: Props) {
           style={{ width: size, height: size }}
           fill={type !== 'empty' ? 'currentColor' : 'none'}
           stroke="currentColor"
+          aria-hidden="true"
         />
       ))}
       <span className="text-sm text-gray-700 ml-1">({rating.toFixed(1)})</span>

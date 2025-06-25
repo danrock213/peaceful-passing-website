@@ -1,6 +1,8 @@
+// /(auth)/sign-up/page.tsx
 'use client';
+
 import { SignUp } from '@clerk/nextjs';
 
 export default function SignUpPage() {
-  return <SignUp />;
+  return <SignUp path="/sign-up" routing="path" />;
 }
