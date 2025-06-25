@@ -17,7 +17,11 @@ interface Vendor {
   images?: string[] | null;
 }
 
-export default async function VendorDetailPage({ params }: { params: { category: string; vendorId: string } }) {
+export default async function VendorDetailPage({
+  params,
+}: {
+  params: { category: string; vendorId: string };
+}) {
   const { category, vendorId } = params;
 
   const { data: vendor, error } = await supabase
