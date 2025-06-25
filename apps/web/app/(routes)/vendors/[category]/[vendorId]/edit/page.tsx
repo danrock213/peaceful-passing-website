@@ -11,7 +11,6 @@ export default function VendorEditPage() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
 
-  // Redirect if user is not a vendor
   useEffect(() => {
     if (isLoaded) {
       if (!user) {
@@ -23,7 +22,6 @@ export default function VendorEditPage() {
     }
   }, [user, isLoaded, router]);
 
-  // Check params validity
   if (
     !params ||
     Array.isArray(params.category) ||
@@ -34,7 +32,6 @@ export default function VendorEditPage() {
 
   const { category, vendorId } = params;
 
-  // Find vendor to edit
   const vendorData: Vendor | undefined = vendors.find(
     (v) => v.category === category && v.id === vendorId
   );
@@ -57,20 +54,17 @@ export default function VendorEditPage() {
   );
   const [images, setImages] = useState<(string | File)[]>(vendorData.images || []);
 
-  // Handle image file input change (preview only)
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
     const filesArray = Array.from(e.target.files);
     setImages((prev) => [...prev, ...filesArray]);
   }
 
-  // Remove image by index
   function removeImage(index: number) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
-  // Cleanup URL.createObjectURL blobs to avoid memory leaks
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       images.forEach((img) => {
         if (typeof img !== 'string') {
@@ -80,7 +74,6 @@ export default function VendorEditPage() {
     };
   }, [images]);
 
-  // Fake submit handler (logs data)
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -112,8 +105,6 @@ export default function VendorEditPage() {
       <h1 className="text-3xl font-bold mb-6">Edit Vendor Profile: {vendorData.name}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* ...form fields unchanged */}
-        {/* Description */}
         <div>
           <label htmlFor="description" className="block font-semibold mb-1">
             Detailed Description (HTML allowed)
@@ -127,7 +118,6 @@ export default function VendorEditPage() {
           />
         </div>
 
-        {/* Images */}
         <div>
           <label className="block font-semibold mb-1">Images (preview only)</label>
           <input type="file" multiple accept="image/*" onChange={handleImageChange} />
@@ -154,7 +144,6 @@ export default function VendorEditPage() {
           </div>
         </div>
 
-        {/* Contact Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="phone" className="block font-semibold mb-1">
@@ -173,3 +162,24 @@ export default function VendorEditPage() {
               Email
             </label>
             <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border rounded p-2"
+            />
+          </div>
+        </div>
+
+        {/* Add other fields (website, hours, services, social) similarly if needed */}
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
+          Save Changes
+        </button>
+      </form>
+    </main>
+  );
+}
