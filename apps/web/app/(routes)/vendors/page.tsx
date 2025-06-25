@@ -23,7 +23,6 @@ interface Vendor {
 
 export default function VendorMarketplacePage() {
   const { isSignedIn } = useUser();
-  const supabase = createClient();
 
   const [city, setCity] = useState('');
   const debouncedCity = useDebounce(city, 500);
@@ -33,14 +32,13 @@ export default function VendorMarketplacePage() {
   const [error, setError] = useState('');
   const [vendors, setVendors] = useState<Vendor[]>([]);
 
-  // Fetch all approved vendors once on mount
   useEffect(() => {
     async function fetchVendors() {
       setLoading(true);
       setError('');
       try {
         const { data, error } = await supabase
-          .from<Vendor>('vendors')
+          .from('vendors')
           .select('*')
           .eq('approved', true);
 
@@ -59,9 +57,8 @@ export default function VendorMarketplacePage() {
     }
 
     fetchVendors();
-  }, [supabase]);
+  }, []);
 
-  // Geocode city input to coordinates
   useEffect(() => {
     if (!debouncedCity) {
       setUserCoords(null);
@@ -88,10 +85,10 @@ export default function VendorMarketplacePage() {
         setLoading(false);
       }
     }
+
     fetchCoords();
   }, [debouncedCity]);
 
-  // Helper: check if category has vendors nearby within radius
   function vendorsNearby(categoryId: string) {
     if (!userCoords) return true;
 
@@ -105,7 +102,6 @@ export default function VendorMarketplacePage() {
 
     if (nearby.length > 0) return true;
 
-    // Fallback: increase radius once
     const fallback = vendorsInCategory.filter(
       (v) =>
         v.lat != null &&
@@ -157,7 +153,6 @@ export default function VendorMarketplacePage() {
               key={cat.id}
               href={`/vendors/${cat.id}`}
               className="block border rounded shadow hover:shadow-lg transition"
-              aria-label={`View ${cat.name} vendors`}
             >
               <div className="relative w-full h-48">
                 <Image src={cat.imageUrl} alt={cat.name} fill className="object-cover" />

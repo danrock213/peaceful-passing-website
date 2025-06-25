@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/server';  // use server client here
 import Link from 'next/link';
 import Image from 'next/image';
 import { vendorCategories } from '@/data/vendors';
@@ -11,22 +11,15 @@ interface Vendor {
   imageUrl?: string | null;
 }
 
-interface Props {
-  params: { category: string };
-}
-
-export default async function VendorCategoryPage({ params }: Props) {
-  const supabase = createClient();
-
+// Remove Props interface, and loosen type of params here:
+export default async function VendorCategoryPage({ params }: { params: any }) {
   const category = params.category;
-  if (!category) {
-    return <p className="p-6">Category not found.</p>;
-  }
-
   const categoryInfo = vendorCategories.find((cat) => cat.id === category);
 
+  const supabase = createClient();
+
   const { data: filteredVendors, error } = await supabase
-    .from<Vendor>('vendors')
+    .from('vendors')
     .select('*')
     .eq('category', category)
     .eq('approved', true)
@@ -38,13 +31,8 @@ export default async function VendorCategoryPage({ params }: Props) {
 
   return (
     <main className="max-w-6xl mx-auto p-6">
-      {/* Category sub-header with image and link */}
       {categoryInfo && (
-        <Link
-          href="/vendors"
-          className="flex items-center gap-4 mb-8 hover:underline"
-          aria-label="Back to Vendor Marketplace"
-        >
+        <Link href="/vendors" className="flex items-center gap-4 mb-8 hover:underline">
           <Image
             src={categoryInfo.imageUrl}
             alt={categoryInfo.name}
@@ -65,7 +53,6 @@ export default async function VendorCategoryPage({ params }: Props) {
               key={vendor.id}
               href={`/vendors/${category}/${vendor.id}`}
               className="group block border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              aria-label={`View details for ${vendor.name}`}
             >
               <div className="relative w-full h-40 bg-gray-100">
                 {vendor.imageUrl ? (

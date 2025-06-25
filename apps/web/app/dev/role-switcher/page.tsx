@@ -12,17 +12,23 @@ export default function RoleSwitcherPage() {
 
     await fetch('/api/set-role', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ role: newRole }),
     });
 
-    window.location.reload(); // Refresh UI after role update
+    window.location.reload();
   };
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-lg rounded-xl mt-10">
       <h1 className="text-2xl font-bold mb-4">Set Your Role</h1>
 
-      <p className="mb-2">Current Role: <strong>{user?.publicMetadata?.role || 'Not set'}</strong></p>
+      <p className="mb-2">
+        Current Role:{' '}
+        <strong>{(user?.publicMetadata?.role as string) || 'Not set'}</strong>
+      </p>
 
       <input
         type="text"

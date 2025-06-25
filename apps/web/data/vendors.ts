@@ -1,40 +1,4 @@
-export interface VendorCategory {
-  id: string;
-  name: string;
-  imageUrl: string;
-  description: string;
-}
-
-export interface Review {
-  id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-export interface Message {
-  id: string;
-  sender: string;
-  content: string;
-  date: string;
-}
-
-export interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  location: string;
-  lat?: number;
-  lng?: number;
-  phone?: string;
-  email?: string;
-  website?: string;
-  imageUrl?: string;
-  images?: string[];
-  description?: string;
-  reviews?: Review[]; // ✅ Added this line
-}
+import type { VendorCategory, Vendor } from '@/types/vendor';
 
 export const vendorCategories: VendorCategory[] = [
   {

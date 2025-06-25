@@ -1,42 +1,28 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@/lib/supabase/server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getCategoryLabel } from '@/lib/vendorUtils';
-import VendorInteractions from '@/components/vendor/VendorInteractions.client';
-import type { Metadata } from 'next';
+import VendorInteractionsWrapper from '@/components/vendor/VendorInteractionsWrapper.client';
+import type { Vendor } from '@/types/vendor';
 
-interface Vendor {
-  id: string;
-  name: string;
-  category: string;
-  location?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  website?: string | null;
-  description?: string | null;
-  imageUrl?: string | null;
-  images?: string[] | null;
-}
-
-interface PageProps {
-  params: {
-    category: string;
-    vendorId: string;
-  };
-}
-
-export default async function VendorDetailPage({ params }: PageProps) {
+export default async function VendorDetailPage({
+  params,
+}: {
+  params: any;  // <-- changed to 'any' to fix TS type errors
+}) {
   const { category, vendorId } = params;
+  const supabase = createClient();
 
   const { data: vendor, error } = await supabase
-    .from<Vendor>('vendors')
+    .from('vendors')
     .select('*')
     .eq('id', vendorId)
     .eq('category', category)
     .eq('approved', true)
-    .single();
+    .single<Vendor>();
 
   if (error || !vendor) {
+    console.error('Error fetching vendor:', error);
     return (
       <main className="max-w-4xl mx-auto p-6">
         <p className="text-red-600">Vendor not found.</p>
@@ -57,17 +43,15 @@ export default async function VendorDetailPage({ params }: PageProps) {
 
       <div className="flex gap-4 overflow-x-auto mb-6">
         {vendor.images?.length ? (
-          vendor.images.map((img, idx) => (
-            <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
-              <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
-            </div>
-          ))
-        ) : vendor.imageUrl ? (
-          <div className="relative w-64 h-40 rounded overflow-hidden shadow">
-            <Image src={vendor.imageUrl} alt={vendor.name} fill className="object-cover" />
-          </div>
+          vendor.images.map((img, idx) =>
+            typeof img === 'string' ? (
+              <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
+                <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
+              </div>
+            ) : null
+          )
         ) : (
-          <p className="text-gray-500">No image available</p>
+          <p className="text-gray-500">No images available</p>
         )}
       </div>
 
@@ -78,13 +62,17 @@ export default async function VendorDetailPage({ params }: PageProps) {
         {vendor.phone && (
           <p>
             <strong>Phone:</strong>{' '}
-            <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">{vendor.phone}</a>
+            <a href={`tel:${vendor.phone}`} className="text-blue-600 underline">
+              {vendor.phone}
+            </a>
           </p>
         )}
         {vendor.email && (
           <p>
             <strong>Email:</strong>{' '}
-            <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">{vendor.email}</a>
+            <a href={`mailto:${vendor.email}`} className="text-blue-600 underline">
+              {vendor.email}
+            </a>
           </p>
         )}
         {vendor.website && (
@@ -97,7 +85,7 @@ export default async function VendorDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      <VendorInteractions vendorId={vendor.id} />
+      <VendorInteractionsWrapper vendorId={vendor.id} />
     </main>
   );
 }

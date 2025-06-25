@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
-
 import StarRatingInput from '@/components/StarRatingInput';
 import StarRatingDisplay from '@/components/StarRatingDisplay';
 import type { Review } from '@/types/vendor';
@@ -18,24 +17,18 @@ interface VendorInteractionsProps {
 export default function VendorInteractions({ vendorId }: VendorInteractionsProps) {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
-  const supabase = createClient();
-
   const userName = user?.firstName || 'Anonymous';
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
-
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [reviewError, setReviewError] = useState('');
-
   const [messageText, setMessageText] = useState('');
   const [messageError, setMessageError] = useState('');
 
-  // Fetch reviews
   useEffect(() => {
     if (!vendorId) return;
 
@@ -53,9 +46,8 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
     };
 
     fetchReviews();
-  }, [vendorId, supabase]);
+  }, [vendorId]);
 
-  // Fetch messages & mark unread user messages as read
   useEffect(() => {
     if (!vendorId) return;
 
@@ -77,13 +69,8 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
       setMessages(messagesData);
       setLoadingMessages(false);
 
-      // Mark unread user messages as read (only for vendor viewing)
       const unreadUserMessageIds = messagesData
-        .filter(
-          (msg) =>
-            msg.sender_type === 'user' &&
-            !msg.read
-        )
+        .filter((msg) => msg.sender_type === 'user' && !msg.read)
         .map((msg) => msg.id);
 
       if (unreadUserMessageIds.length > 0) {
@@ -95,12 +82,9 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
         if (updateError) {
           console.error('Failed to mark messages as read:', updateError);
         } else {
-          // Optimistically update local state
           setMessages((prev) =>
             prev.map((msg) =>
-              unreadUserMessageIds.includes(msg.id)
-                ? { ...msg, read: true }
-                : msg
+              unreadUserMessageIds.includes(msg.id) ? { ...msg, read: true } : msg
             )
           );
         }
@@ -108,7 +92,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
     };
 
     fetchMessages();
-  }, [vendorId, supabase]);
+  }, [vendorId]);
 
   const averageRating = useMemo(() => {
     if (!reviews.length) return null;
@@ -156,7 +140,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
     const newMessage = {
       vendor_id: vendorId,
       sender: userName,
-      sender_type: 'user', // mark as user message explicitly
+      sender_type: 'user' as const,
       content: messageText.trim(),
       date: new Date().toISOString(),
       read: false,
@@ -178,7 +162,6 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
 
   return (
     <>
-      {/* Average Rating */}
       {averageRating !== null && (
         <div className="text-yellow-600 mb-4 flex items-center gap-2">
           <StarRatingDisplay rating={averageRating} size={16} />

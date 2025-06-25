@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import DashboardShell from './DashboardShell';
 import type { Tribute } from '@/types/tribute';
 import type { ChecklistItem, Vendor, Event, Activity } from '@/types/dashboard';
+import { supabase } from '@/lib/supabaseClient';
 
 export default async function DashboardPage() {
   const user = await currentUser();
@@ -13,8 +14,6 @@ export default async function DashboardPage() {
 
   if (role === 'vendor') redirect('/vendors/dashboard');
   if (role === 'admin') redirect('/admin/dashboard');
-
-  const supabase = createClient();
 
   // 🎯 Fetch tributes for current user
   const { data: userTributes, error } = await supabase

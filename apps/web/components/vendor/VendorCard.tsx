@@ -1,4 +1,5 @@
 'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { Vendor } from '@/types/vendor';
@@ -31,7 +32,7 @@ export default function VendorCard({ vendor }: Props) {
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold text-[#1D3557] truncate">{vendor.name}</h3>
-        <p className="text-sm text-gray-600 truncate">{vendor.location}</p>
+        <p className="text-sm text-gray-600 truncate">{vendor.location ?? 'No location listed'}</p>
         {avg !== null && (
           <div className="text-sm text-yellow-600 mt-1 flex items-center gap-1">
             <StarRatingDisplay rating={avg} size={14} />

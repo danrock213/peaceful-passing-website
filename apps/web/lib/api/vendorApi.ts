@@ -1,53 +1,46 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
+import type { Vendor } from '@/types/vendor';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export type Vendor = {
-  id: string;
-  created_by: string;
-  name: string;
-  category: string;
-  phone?: string;
-  website?: string;
-  description?: string;
-  location?: string;
-  lat?: number;
-  lng?: number;
-  approved: boolean;
-  imageUrl?: string;
-  // add other fields as needed
-};
-
-export async function getAllApprovedVendors() {
+export async function getAllApprovedVendors(): Promise<Vendor[]> {
   const { data, error } = await supabase
-    .from<Vendor>('vendors')
+    .from('vendors')
     .select('*')
     .eq('approved', true);
 
-  if (error) throw error;
-  return data ?? [];
+  if (error) {
+    console.error('Failed to fetch all vendors:', error.message);
+    throw error;
+  }
+
+  return (data as Vendor[]) ?? [];
 }
 
-export async function getVendorsByCategory(category: string) {
+export async function getVendorsByCategory(category: string): Promise<Vendor[]> {
   const { data, error } = await supabase
-    .from<Vendor>('vendors')
+    .from('vendors')
     .select('*')
     .eq('category', category)
     .eq('approved', true);
 
-  if (error) throw error;
-  return data ?? [];
+  if (error) {
+    console.error(`Failed to fetch vendors in category ${category}:`, error.message);
+    throw error;
+  }
+
+  return (data as Vendor[]) ?? [];
 }
 
-export async function getVendorById(id: string) {
+export async function getVendorById(id: string): Promise<Vendor | null> {
   const { data, error } = await supabase
-    .from<Vendor>('vendors')
+    .from('vendors')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error(`Failed to fetch vendor with ID ${id}:`, error.message);
+    return null; // Do not throw, just return null
+  }
+
+  return data as Vendor;
 }

@@ -7,14 +7,13 @@ import type { Message, Vendor } from '@/types/vendor';
 
 export default function VendorMessagesDashboard() {
   const { isSignedIn, user } = useUser();
-  const supabase = createClient();
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [sendingReply, setSendingReply] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchVendorAndMessages() {
@@ -23,12 +22,11 @@ export default function VendorMessagesDashboard() {
       setLoading(true);
       setError('');
 
-      // 1. Look up vendor by email
       const { data: vendorData, error: vendorError } = await supabase
-        .from<Vendor>('vendors')
+        .from('vendors')
         .select('*')
         .eq('email', user.primaryEmailAddress.emailAddress)
-        .single();
+        .single<Vendor>();
 
       if (vendorError || !vendorData) {
         setError('No vendor profile found for this account.');
@@ -38,9 +36,8 @@ export default function VendorMessagesDashboard() {
 
       setVendor(vendorData);
 
-      // 2. Fetch messages for this vendor
       const { data: messagesData, error: messagesError } = await supabase
-        .from<Message>('messages')
+        .from('messages')
         .select('*')
         .eq('vendor_id', vendorData.id)
         .order('date', { ascending: true });
@@ -76,15 +73,15 @@ export default function VendorMessagesDashboard() {
         sender_type: 'vendor',
         content: reply,
         date: new Date().toISOString(),
+        read: false,
       },
     ]);
 
     if (error) {
       alert('Failed to send reply. Please try again.');
     } else {
-      // Refetch messages after reply
       const { data } = await supabase
-        .from<Message>('messages')
+        .from('messages')
         .select('*')
         .eq('vendor_id', vendor.id)
         .order('date', { ascending: true });

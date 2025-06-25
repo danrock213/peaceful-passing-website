@@ -1,5 +1,4 @@
-import type { Vendor } from '@/types/vendor';
-import { VendorProfile } from '@/types/vendor';
+import type { VendorProfile } from '@/types/vendor';
 
 const STORAGE_PREFIX = 'vendor-profile-';
 
@@ -19,5 +18,4 @@ export const saveVendorProfile = (profile: VendorProfile): void => {
   if (typeof window === 'undefined') return;
   profile.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_PREFIX + profile.vendorId, JSON.stringify(profile));
-
 };
