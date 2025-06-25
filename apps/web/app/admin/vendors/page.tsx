@@ -5,7 +5,7 @@ import { useVendors, VendorStatus } from '@/hooks/useVendors';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
-const ADMIN_EMAILS = ['danielmrockwell@gmail.com']; // replace with your admin email(s)
+const ADMIN_EMAILS = ['danielmrockwell@gmail.com'];
 
 export default function AdminVendorListPage() {
   const { vendors, updateVendorStatus } = useVendors();
@@ -14,16 +14,14 @@ export default function AdminVendorListPage() {
 
   const [filter, setFilter] = useState<'all' | VendorStatus>('pending');
 
-  // Redirect non-admin users away
   if (!isSignedIn) {
     router.push('/sign-in?redirect_url=/admin/vendors');
     return null;
   }
+
   if (!user || user.publicMetadata?.role !== 'admin') {
     router.push('/');
     return null;
-  }
-
   }
 
   const filteredVendors =
