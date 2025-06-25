@@ -48,7 +48,8 @@
     "tailwindcss-animate": "1.0.7",
     "tippy.js": "6.3.7",
     "ts-pattern": "5.0.8",
-    "use-debounce": "10.0.0"
+    "use-debounce": "10.0.0",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
