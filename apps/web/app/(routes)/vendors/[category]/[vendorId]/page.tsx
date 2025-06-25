@@ -17,13 +17,16 @@ interface Vendor {
   images?: string[] | null;
 }
 
-export default async function VendorDetailPage({
-  params,
-}: {
-  params: { category: string; vendorId: string };
-}) {
-  const { category, vendorId } = params;
+interface PageProps {
+  params: {
+    category: string;
+    vendorId: string;
+  };
+}
 
+export default async function VendorDetailPage({
+  params: { category, vendorId },
+}: PageProps) {
   const { data: vendor, error } = await supabase
     .from<Vendor>('vendors')
     .select('*')
@@ -45,7 +48,10 @@ export default async function VendorDetailPage({
 
   return (
     <main className="max-w-4xl mx-auto p-6">
-      <Link href={`/vendors/${category}`} className="text-blue-600 underline mb-4 inline-block">
+      <Link
+        href={`/vendors/${category}`}
+        className="text-blue-600 underline mb-4 inline-block"
+      >
         &larr; Back to {getCategoryLabel(category)}
       </Link>
 
@@ -54,13 +60,26 @@ export default async function VendorDetailPage({
       <div className="flex gap-4 overflow-x-auto mb-6">
         {vendor.images?.length ? (
           vendor.images.map((img, idx) => (
-            <div key={idx} className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow">
-              <Image src={img} alt={`${vendor.name} image ${idx + 1}`} fill className="object-cover" />
+            <div
+              key={idx}
+              className="relative w-64 h-40 flex-shrink-0 rounded overflow-hidden shadow"
+            >
+              <Image
+                src={img}
+                alt={`${vendor.name} image ${idx + 1}`}
+                fill
+                className="object-cover"
+              />
             </div>
           ))
         ) : vendor.imageUrl ? (
           <div className="relative w-64 h-40 rounded overflow-hidden shadow">
-            <Image src={vendor.imageUrl} alt={`${vendor.name}`} fill className="object-cover" />
+            <Image
+              src={vendor.imageUrl}
+              alt={`${vendor.name}`}
+              fill
+              className="object-cover"
+            />
           </div>
         ) : (
           <p className="text-gray-500">No image available</p>
@@ -70,7 +89,11 @@ export default async function VendorDetailPage({
       <p className="mb-6 text-gray-700 whitespace-pre-line">{vendor.description}</p>
 
       <div className="mb-6 space-y-1 text-gray-800">
-        {vendor.location && <p><strong>Location:</strong> {vendor.location}</p>}
+        {vendor.location && (
+          <p>
+            <strong>Location:</strong> {vendor.location}
+          </p>
+        )}
         {vendor.phone && (
           <p>
             <strong>Phone:</strong>{' '}
