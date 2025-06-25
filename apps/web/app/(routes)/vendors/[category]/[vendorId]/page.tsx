@@ -17,11 +17,14 @@ interface Vendor {
   images?: string[] | null;
 }
 
-export default async function VendorDetailPage({
-  params,
-}: {
-  params: { category: string | string[]; vendorId: string | string[] };
-}) {
+type PageProps = {
+  params: {
+    category: string | string[];
+    vendorId: string | string[];
+  };
+};
+
+export default async function VendorDetailPage({ params }: PageProps) {
   const category = Array.isArray(params.category) ? params.category[0] : params.category;
   const vendorId = Array.isArray(params.vendorId) ? params.vendorId[0] : params.vendorId;
 
@@ -46,10 +49,7 @@ export default async function VendorDetailPage({
 
   return (
     <main className="max-w-4xl mx-auto p-6">
-      <Link
-        href={`/vendors/${category}`}
-        className="text-blue-600 underline mb-4 inline-block"
-      >
+      <Link href={`/vendors/${category}`} className="text-blue-600 underline mb-4 inline-block">
         &larr; Back to {getCategoryLabel(category)}
       </Link>
 
@@ -74,7 +74,7 @@ export default async function VendorDetailPage({
           <div className="relative w-64 h-40 rounded overflow-hidden shadow">
             <Image
               src={vendor.imageUrl}
-              alt={`${vendor.name}`}
+              alt={vendor.name}
               fill
               className="object-cover"
             />
@@ -87,11 +87,7 @@ export default async function VendorDetailPage({
       <p className="mb-6 text-gray-700 whitespace-pre-line">{vendor.description}</p>
 
       <div className="mb-6 space-y-1 text-gray-800">
-        {vendor.location && (
-          <p>
-            <strong>Location:</strong> {vendor.location}
-          </p>
-        )}
+        {vendor.location && <p><strong>Location:</strong> {vendor.location}</p>}
         {vendor.phone && (
           <p>
             <strong>Phone:</strong>{' '}
