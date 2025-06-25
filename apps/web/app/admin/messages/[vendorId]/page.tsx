@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import type { Message, Vendor } from '@/types/vendor';
 import Link from 'next/link';
 

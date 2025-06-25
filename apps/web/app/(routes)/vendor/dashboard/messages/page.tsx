@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import type { Message, Vendor } from '@/types/vendor';
 
 export default function VendorMessagesDashboard() {

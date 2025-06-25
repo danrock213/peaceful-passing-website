@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getCategoryLabel } from '@/lib/vendorUtils';
-import VendorInteractions from '@/components/vendor/VendorInteractions.client'; // ✅ wrapper client component
+import VendorInteractions from '@/components/vendor/VendorInteractions.client';
 
 interface Vendor {
   id: string;
@@ -17,11 +17,7 @@ interface Vendor {
   images?: string[] | null;
 }
 
-interface Props {
-  params: { category: string; vendorId: string };
-}
-
-export default async function VendorDetailPage({ params }: Props) {
+export default async function VendorDetailPage({ params }: { params: { category: string; vendorId: string } }) {
   const { category, vendorId } = params;
 
   const { data: vendor, error } = await supabase

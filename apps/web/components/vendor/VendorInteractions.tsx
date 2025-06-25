@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 import StarRatingInput from '@/components/StarRatingInput';
 import StarRatingDisplay from '@/components/StarRatingDisplay';

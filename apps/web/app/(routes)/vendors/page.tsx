@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { vendorCategories } from '@/data/vendors';
 import { haversineDistance } from '@/lib/geoUtils';
 import { geocodeCity } from '@/lib/geocode';
