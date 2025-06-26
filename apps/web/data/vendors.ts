@@ -58,6 +58,8 @@ export const vendors: Vendor[] = [
     imageUrl: '/images/vendors/sunset-funeral-home.png',
     images: ['/images/vendors/sunset-funeral-home.png'],
     description: 'Providing compassionate funeral services in New York.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'peaceful-cremations',
@@ -70,6 +72,8 @@ export const vendors: Vendor[] = [
     website: 'https://peacefulcremations.com',
     imageUrl: '/images/vendors/peaceful-cremations.png',
     description: 'Dignified and respectful cremation services.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'bloom-and-remembrance',
@@ -82,6 +86,8 @@ export const vendors: Vendor[] = [
     website: 'https://bloomandremembrance.com',
     imageUrl: '/images/vendors/bloom-florist.png',
     description: 'Elegant floral arrangements for memorial services.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'new-hope-counseling',
@@ -94,6 +100,8 @@ export const vendors: Vendor[] = [
     website: 'https://newhopecounseling.com',
     imageUrl: '/images/vendors/new-hope-counseling.png',
     description: 'Licensed counselors specializing in grief support.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'legacy-law-group',
@@ -106,6 +114,8 @@ export const vendors: Vendor[] = [
     website: 'https://legacylawgroup.com',
     imageUrl: '/images/vendors/legacy-law.png',
     description: 'Experienced estate attorneys for your peace of mind.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'eternal-keepsakes',
@@ -117,6 +127,8 @@ export const vendors: Vendor[] = [
     website: 'https://eternalkeepsakes.com',
     imageUrl: '/images/vendors/eternal-keepsakes.png',
     description: 'Unique urns, jewelry, and memory boxes.',
+    approved: true,
+    status: 'approved',
   },
   {
     id: 'tranquil-meadows-venue',
@@ -129,5 +141,7 @@ export const vendors: Vendor[] = [
     website: 'https://tranquilmeadows.com',
     imageUrl: '/images/vendors/tranquil-meadows.png',
     description: 'A peaceful setting for memorial gatherings.',
+    approved: true,
+    status: 'approved',
   },
 ];

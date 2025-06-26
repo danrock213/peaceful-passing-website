@@ -1,3 +1,5 @@
+export type VendorStatus = 'pending' | 'approved' | 'rejected';
+
 export interface VendorCategory {
   id: string;
   name: string;
@@ -31,6 +33,7 @@ export interface Vendor {
   name: string;
   category: string;
   location: string;
+  status: VendorStatus; // ✅ ADDED TO FIX BUILD
   lat?: number;
   lng?: number;
   phone?: string;
@@ -50,6 +53,7 @@ export interface Vendor {
   approved?: boolean;
   updatedAt?: string;
 }
+
 export interface VendorProfile {
   vendorId: string;
   businessName: string;

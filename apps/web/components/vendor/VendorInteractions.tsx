@@ -19,20 +19,24 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
   const router = useRouter();
   const userName = user?.firstName || 'Anonymous';
 
+  // --- Reviews state ---
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [reviewError, setReviewError] = useState('');
+
+  // --- Messages state ---
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [messageError, setMessageError] = useState('');
 
+  // Fetch reviews on vendorId change
   useEffect(() => {
     if (!vendorId) return;
 
-    const fetchReviews = async () => {
+    async function fetchReviews() {
       setLoadingReviews(true);
       const { data, error } = await supabase
         .from('reviews')
@@ -43,15 +47,16 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
       if (error) console.error('Failed to fetch reviews:', error);
       setReviews(data ?? []);
       setLoadingReviews(false);
-    };
+    }
 
     fetchReviews();
   }, [vendorId]);
 
+  // Fetch messages on vendorId change
   useEffect(() => {
     if (!vendorId) return;
 
-    const fetchMessages = async () => {
+    async function fetchMessages() {
       setLoadingMessages(true);
       const { data, error } = await supabase
         .from('messages')
@@ -69,6 +74,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
       setMessages(messagesData);
       setLoadingMessages(false);
 
+      // Mark unread user messages as read
       const unreadUserMessageIds = messagesData
         .filter((msg) => msg.sender_type === 'user' && !msg.read)
         .map((msg) => msg.id);
@@ -89,22 +95,25 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
           );
         }
       }
-    };
+    }
 
     fetchMessages();
   }, [vendorId]);
 
+  // Calculate average rating
   const averageRating = useMemo(() => {
     if (!reviews.length) return null;
     const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
     return sum / reviews.length;
   }, [reviews]);
 
+  // Get user's recent messages
   const recentUserMessages = useMemo(
     () => messages.filter((msg) => msg.sender === userName).slice(0, 3),
     [messages, userName]
   );
 
+  // Handle review submission
   const handleSubmitReview = async () => {
     if (!isSignedIn) return router.push('/sign-in');
 
@@ -133,6 +142,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
     setReviewError('');
   };
 
+  // Handle message submission
   const handleSubmitMessage = async () => {
     if (!isSignedIn) return router.push('/sign-in');
     if (!messageText.trim()) return setMessageError('Please enter a message.');
@@ -162,6 +172,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
 
   return (
     <>
+      {/* Average Rating Display */}
       {averageRating !== null && (
         <div className="text-yellow-600 mb-4 flex items-center gap-2">
           <StarRatingDisplay rating={averageRating} size={16} />
@@ -171,7 +182,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
         </div>
       )}
 
-      {/* Messages */}
+      {/* Messaging Section */}
       <section className="mb-10">
         <h2 className="text-2xl font-semibold mb-2">Send a Message</h2>
         {isSignedIn ? (
@@ -222,7 +233,7 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
         )}
       </section>
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       <section>
         <h2 className="text-2xl font-semibold mb-4">Reviews ({reviews.length})</h2>
         <div className="mb-6 p-4 border rounded bg-gray-50">
@@ -278,6 +289,12 @@ export default function VendorInteractions({ vendorId }: VendorInteractionsProps
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* Placeholder for Booking Requests Feature */}
+      <section className="mt-10">
+        <h2 className="text-2xl font-semibold mb-4">Booking Requests (Coming Soon)</h2>
+        <p className="text-gray-600 italic">Booking requests feature is under development.</p>
       </section>
     </>
   );

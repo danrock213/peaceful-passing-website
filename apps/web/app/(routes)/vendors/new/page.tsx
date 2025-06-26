@@ -6,6 +6,16 @@ import { useUser } from '@clerk/nextjs';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import VendorLocationForm from '@/components/VendorLocationForm';
 
+const categoryLabels: Record<string, string> = {
+  'funeral-homes': 'Funeral Homes',
+  crematoriums: 'Crematoriums',
+  florists: 'Florists',
+  'grief-counselors': 'Grief Counselors',
+  'estate-lawyers': 'Estate Lawyers',
+  'memorial-products': 'Memorial Product Providers',
+  'event-venues': 'Event Venues',
+};
+
 export default function AddVendorPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
@@ -26,7 +36,7 @@ export default function AddVendorPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect if user is not a vendor or not signed in
+  // Redirect if user is not vendor or not signed in
   useEffect(() => {
     if (isLoaded) {
       if (!user) {
@@ -45,6 +55,7 @@ export default function AddVendorPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
+    setError(null); // clear error on input change
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
       const target = e.target as HTMLInputElement;
@@ -54,8 +65,22 @@ export default function AddVendorPage() {
     }
   };
 
+  const validateForm = () => {
+    if (!form.name.trim()) {
+      setError('Name is required.');
+      return false;
+    }
+    if (!form.location.trim()) {
+      setError('Location is required.');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setSaving(true);
     setError(null);
 
@@ -68,7 +93,7 @@ export default function AddVendorPage() {
     const { data, error: supabaseError } = await supabase.from('vendors').insert({
       ...form,
       created_by: user.id,
-      approved: false, // always start unapproved; admin approves later
+      approved: false, // start unapproved; admin approves later
     });
 
     setSaving(false);
@@ -78,25 +103,37 @@ export default function AddVendorPage() {
       return;
     }
 
+    alert('Vendor submitted! Awaiting admin approval.');
     router.push('/vendors/pending');
   };
 
+  if (!isLoaded) {
+    return (
+      <main className="max-w-xl mx-auto p-6 text-center">
+        <p>Loading user data...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Add / Edit Vendor</h1>
+      <h1 className="text-2xl font-bold mb-4">Add Vendor Profile</h1>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded" role="alert">
+          {error}
+        </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Basic info */}
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {/* Name, Phone, Website */}
         {['name', 'phone', 'website'].map((field) => (
           <div key={field}>
-            <label className="block text-sm font-medium">
+            <label htmlFor={field} className="block text-sm font-medium">
               {field[0].toUpperCase() + field.slice(1)}
             </label>
             <input
+              id={field}
               name={field}
               type={field === 'phone' ? 'tel' : 'text'}
               required={field === 'name'}
@@ -109,24 +146,19 @@ export default function AddVendorPage() {
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium">Category</label>
+          <label htmlFor="category" className="block text-sm font-medium">
+            Category
+          </label>
           <select
+            id="category"
             name="category"
             value={form.category}
             onChange={handleChange}
             className="w-full border p-2 rounded"
           >
-            {[
-              'funeral-homes',
-              'crematoriums',
-              'florists',
-              'grief-counselors',
-              'estate-lawyers',
-              'memorial-products',
-              'event-venues',
-            ].map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.replace(/-/g, ' ')}
+            {Object.entries(categoryLabels).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
               </option>
             ))}
           </select>
@@ -134,8 +166,11 @@ export default function AddVendorPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium">Description</label>
+          <label htmlFor="description" className="block text-sm font-medium">
+            Description
+          </label>
           <textarea
+            id="description"
             name="description"
             rows={4}
             value={form.description}
@@ -150,7 +185,7 @@ export default function AddVendorPage() {
           onSave={handleLocationSave}
         />
 
-        {/* Approval toggle (usually admins set this; maybe hide?) */}
+        {/* Approved checkbox (disabled for vendors) */}
         <div>
           <label className="inline-flex items-center space-x-2">
             <input
@@ -159,11 +194,9 @@ export default function AddVendorPage() {
               checked={form.approved}
               onChange={handleChange}
               className="form-checkbox"
-              disabled // disable so vendors can't self-approve
+              disabled
             />
-            <span className="text-sm opacity-50">
-              Approved (admins control this)
-            </span>
+            <span className="text-sm opacity-50">Approved (admin only)</span>
           </label>
         </div>
 
