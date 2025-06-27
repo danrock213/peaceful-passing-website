@@ -34,7 +34,7 @@ export default function BookingFormPage() {
         .eq('approved', true);
 
       if (error) console.error(error);
-      else setVendors(data);
+      else setVendors(data ?? []);
     };
 
     fetchVendors();
@@ -68,7 +68,7 @@ export default function BookingFormPage() {
       return;
     }
 
-    if (existing.length > 0) {
+    if ((existing?.length ?? 0) > 0) {
       setError('You have already requested a booking with this vendor for the selected date.');
       setSubmitting(false);
       return;
@@ -126,7 +126,7 @@ export default function BookingFormPage() {
           <label className="block font-medium">Date and Time</label>
           <DatePicker
             selected={date}
-            onChange={(date) => setDate(date)}
+            onChange={(date: Date | null) => setDate(date)}
             showTimeSelect
             dateFormat="Pp"
             className="w-full p-2 border rounded"
