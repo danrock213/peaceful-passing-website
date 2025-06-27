@@ -4,26 +4,39 @@ import { createClient } from '@/lib/supabase/server';
 import DashboardShell from './DashboardShell';
 import type { Tribute } from '@/types/tribute';
 import type { ChecklistItem, Vendor, Event, Activity } from '@/types/dashboard';
-import { supabase } from '@/lib/supabaseClient';
 
 export default async function DashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/sign-in');
 
-  const role = user.publicMetadata?.role || 'user';
+  const supabase = createClient();
+
+  // Fetch the user's role from Supabase profiles table by clerk_id
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('clerk_id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error('Error fetching user profile role:', profileError.message);
+    // Optionally, handle error or fallback here
+  }
+
+  const role = profile?.role ?? 'user';
 
   if (role === 'vendor') redirect('/vendors/dashboard');
   if (role === 'admin') redirect('/admin/dashboard');
 
-  // 🎯 Fetch tributes for current user
-  const { data: userTributes, error } = await supabase
+  // Fetch tributes for the current user using Clerk user id
+  const { data: userTributes, error: tributesError } = await supabase
     .from('tributes')
     .select('*')
     .eq('created_by', user.id)
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching tributes:', error.message);
+  if (tributesError) {
+    console.error('Error fetching tributes:', tributesError.message);
   }
 
   const checklist: ChecklistItem[] = [
