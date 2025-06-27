@@ -1,10 +1,14 @@
 'use client';
 
 import Header from '@/components/common/Header';
+import ClerkSupabaseSync from '@/components/ClerkSupabaseSync';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
+      {/* Sync Clerk user to Supabase profile */}
+      <ClerkSupabaseSync />
+
       <Header />
       <main className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10">
         {children}

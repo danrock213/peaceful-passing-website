@@ -1,81 +1,172 @@
-// app/(user)/bookings/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-interface BookingRequest {
+interface Vendor {
   id: string;
-  vendor_id: string;
-  date: string;
-  status: 'pending' | 'accepted' | 'rejected';
   name: string;
-  email: string;
 }
 
-export default function UserBookingHistoryPage() {
-  const { user, isLoaded } = useUser();
+export default function BookingFormPage() {
+  const { user, isSignedIn } = useUser();
+  const router = useRouter();
   const supabase = createClientComponentClient();
-  const [requests, setRequests] = useState<BookingRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [date, setDate] = useState<Date | null>(null);
+  const [notes, setNotes] = useState('');
+  const [location, setLocation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!user?.id) return;
-
-    const fetchUserBookings = async () => {
-      setLoading(true);
+    const fetchVendors = async () => {
       const { data, error } = await supabase
-        .from('booking_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .from('vendors')
+        .select('id, name')
+        .eq('approved', true);
 
-      if (error) {
-        console.error('Failed to fetch user bookings:', error);
-      } else {
-        setRequests(data ?? []);
-      }
-
-      setLoading(false);
+      if (error) console.error(error);
+      else setVendors(data);
     };
 
-    fetchUserBookings();
-  }, [user, supabase]);
+    fetchVendors();
+  }, [supabase]);
 
-  if (!isLoaded || !user) return <p>Loading user...</p>;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    setSuccess(false);
+
+    if (!user || !selectedVendorId || !date || !location) {
+      setError('Please fill in all required fields.');
+      setSubmitting(false);
+      return;
+    }
+
+    const isoDate = date.toISOString();
+
+    // Prevent duplicate booking check
+    const { data: existing, error: dupError } = await supabase
+      .from('booking_requests')
+      .select('id')
+      .eq('vendor_id', selectedVendorId)
+      .eq('user_id', user.id)
+      .eq('date', isoDate);
+
+    if (dupError) {
+      setError('Failed to check for duplicates.');
+      setSubmitting(false);
+      return;
+    }
+
+    if (existing.length > 0) {
+      setError('You have already requested a booking with this vendor for the selected date.');
+      setSubmitting(false);
+      return;
+    }
+
+    const { error: insertError } = await supabase.from('booking_requests').insert({
+      user_id: user.id,
+      vendor_id: selectedVendorId,
+      date: isoDate,
+      notes,
+      location,
+      name: user.fullName || user.username || 'User',
+      email: user.emailAddresses?.[0]?.emailAddress || '',
+      status: 'pending',
+    });
+
+    if (insertError) {
+      setError('Failed to submit booking request.');
+      console.error(insertError);
+    } else {
+      setSuccess(true);
+      setSelectedVendorId('');
+      setDate(null);
+      setNotes('');
+      setLocation('');
+    }
+
+    setSubmitting(false);
+  };
+
+  if (!isSignedIn) return <p className="p-4">Please sign in to request a booking.</p>;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-[#1D3557]">Your Booking Requests</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : requests.length === 0 ? (
-        <p>You have not submitted any booking requests yet.</p>
-      ) : (
-        <ul className="space-y-4">
-          {requests.map((req) => (
-            <li key={req.id} className="border p-4 rounded bg-white shadow">
-              <p className="text-lg font-semibold">Vendor ID: {req.vendor_id}</p>
-              <p className="text-sm text-gray-600">
-                Submitted on {new Date(req.date).toLocaleDateString()} at{' '}
-                {new Date(req.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-              <span
-                className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium text-white ${
-                  req.status === 'accepted'
-                    ? 'bg-green-600'
-                    : req.status === 'rejected'
-                    ? 'bg-red-600'
-                    : 'bg-yellow-500'
-                }`}
-              >
-                {req.status.toUpperCase()}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="max-w-xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4 text-[#1D3557]">Request a Booking</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Vendor</label>
+          <select
+            value={selectedVendorId}
+            onChange={(e) => setSelectedVendorId(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select a vendor</option>
+            {vendors.map((vendor) => (
+              <option key={vendor.id} value={vendor.id}>
+                {vendor.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium">Date and Time</label>
+          <DatePicker
+            selected={date}
+            onChange={(date) => setDate(date)}
+            showTimeSelect
+            dateFormat="Pp"
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Location</label>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Notes</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full p-2 border rounded"
+            rows={3}
+            placeholder="Optional details about your request"
+          />
+        </div>
+
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {success && <p className="text-green-600 text-sm">Booking request submitted!</p>}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          Submit Request
+        </button>
+      </form>
     </div>
   );
 }

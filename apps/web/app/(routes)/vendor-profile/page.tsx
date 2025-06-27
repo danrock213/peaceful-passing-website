@@ -1,19 +1,43 @@
 'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function VendorProfile() {
-  const [businessName, setBusinessName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
+  const [businessName, setBusinessName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const supabase = createClientComponentClient();
+  const { user } = useUser();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For now, just log the data — we'll add backend saving later
-    console.log({ businessName, email, phone, address, description });
-    alert("Profile saved! (This is a placeholder — backend coming soon.)");
+    if (!user?.id) return alert('You must be logged in to create a vendor profile.');
+
+    setLoading(true);
+    const { error } = await supabase.from('vendors').upsert({
+      created_by: user.id,
+      business_name: businessName,
+      email,
+      phone,
+      location: address,
+      description,
+      status: 'pending',
+    });
+
+    setLoading(false);
+
+    if (error) {
+      console.error('Failed to save vendor profile:', error);
+      alert('Something went wrong. Please try again.');
+    } else {
+      alert('Vendor profile submitted successfully! Pending admin review.');
+    }
   };
 
   return (
@@ -64,9 +88,10 @@ export default function VendorProfile() {
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold"
         >
-          Save Profile
+          {loading ? 'Saving...' : 'Save Profile'}
         </button>
       </form>
     </main>

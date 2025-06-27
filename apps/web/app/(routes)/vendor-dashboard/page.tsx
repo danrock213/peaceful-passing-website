@@ -6,7 +6,7 @@ export default function VendorDashboard() {
       <header className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Vendor Dashboard</h1>
         <p className="text-gray-600">
-          Manage your profile, messages, and listings here.
+          Manage your profile, messages, listings, and bookings here.
         </p>
       </header>
 
@@ -24,6 +24,11 @@ export default function VendorDashboard() {
         <Link href="/vendor-listings" className="bg-white shadow-sm hover:shadow-md p-4 rounded-xl border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">Listings</h2>
           <p className="text-sm text-gray-600">Manage your services and offerings.</p>
+        </Link>
+
+        <Link href="/vendor/bookings" className="bg-white shadow-sm hover:shadow-md p-4 rounded-xl border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">Manage Bookings</h2>
+          <p className="text-sm text-gray-600">View and respond to booking requests.</p>
         </Link>
       </nav>
     </main>
