@@ -1,8 +1,14 @@
-import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+/** ESM-safe way to get __dirname */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  productionBrowserSourceMaps: true, // 🔍 Useful for debugging errors in prod
   images: {
     formats: ['image/avif', 'image/webp'],
     domains: [],
@@ -21,7 +27,7 @@ const nextConfig = {
     ];
   },
   webpack(config) {
-    config.resolve.alias['@'] = path.resolve('.');
+    config.resolve.alias['@'] = resolve(__dirname, '.');
     return config;
   },
 };
