@@ -12,13 +12,10 @@ export default function AdminVendorMessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!isLoaded) return;
+  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
 
-    if (!user || user.publicMetadata?.role !== 'admin') {
-      router.push('/');
-      return;
-    }
+  useEffect(() => {
+    if (!isAdmin) return;
 
     const fetchMessages = async () => {
       const { data, error } = await supabase
@@ -26,20 +23,16 @@ export default function AdminVendorMessagesPage() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching messages:', error.message);
-        return;
-      }
-
-      setMessages(data ?? []);
+      if (error) console.error('Error fetching messages:', error.message);
+      else setMessages(data ?? []);
       setLoading(false);
     };
 
     fetchMessages();
-  }, [isLoaded, user, router]);
+  }, [isAdmin]);
 
   if (!isLoaded) return <p className="p-6">Loading user…</p>;
-  if (!user || user.publicMetadata?.role !== 'admin') return null;
+  if (!isAdmin) return <p className="p-6 text-red-600 font-semibold">Unauthorized</p>;
 
   return (
     <main className="max-w-4xl mx-auto p-6">
@@ -56,7 +49,9 @@ export default function AdminVendorMessagesPage() {
               <p><strong>From:</strong> {msg.sender_type}</p>
               <p><strong>Message:</strong> {msg.content}</p>
               <p className="text-sm text-gray-500">
-                {new Date(msg.created_at).toLocaleString()}
+                {msg.created_at
+                  ? new Date(msg.created_at).toLocaleString()
+                  : 'Unknown date'}
               </p>
             </li>
           ))}

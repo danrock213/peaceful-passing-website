@@ -20,10 +20,10 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const isAdmin = user?.publicMetadata?.role === 'admin';
+  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
 
   useEffect(() => {
-    if (!isLoaded || !isAdmin) return;
+    if (!isAdmin) return;
 
     const fetchRequests = async () => {
       setLoading(true);
@@ -32,18 +32,14 @@ export default function AdminBookingsPage() {
         .select('*')
         .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Failed to fetch booking requests:', error.message);
-        setRequests([]);
-      } else {
-        setRequests(data ?? []);
-      }
+      setRequests(data ?? []);
+      if (error) console.error('Failed to fetch booking requests:', error.message);
 
       setLoading(false);
     };
 
     fetchRequests();
-  }, [isLoaded, isAdmin]);
+  }, [isAdmin]);
 
   const updateStatus = async (id: string, newStatus: 'accepted' | 'rejected') => {
     setUpdatingId(id);
@@ -56,24 +52,18 @@ export default function AdminBookingsPage() {
     if (error) {
       alert('Failed to update status');
       console.error(error);
-      setUpdatingId(null);
-      return;
+    } else {
+      await fetch('/api/notify-booking-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: id, newStatus }),
+      });
+
+      setRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+      );
     }
 
-    const res = await fetch('/api/notify-booking-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId: id, newStatus }),
-    });
-
-    if (!res.ok) {
-      alert('Notification failed');
-      console.error(await res.text());
-    }
-
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-    );
     setUpdatingId(null);
   };
 
@@ -97,22 +87,13 @@ export default function AdminBookingsPage() {
             >
               <div>
                 <p className="font-semibold">{req.name} ({req.email})</p>
-                <p className="text-sm text-gray-600">
-                  Vendor ID: <code>{req.vendor_id}</code>
-                </p>
-                <p className="text-sm text-gray-500">
-                  Requested on {new Date(req.date).toLocaleString()}
-                </p>
+                <p className="text-sm text-gray-600">Vendor ID: <code>{req.vendor_id}</code></p>
+                <p className="text-sm text-gray-500">Requested on {new Date(req.date).toLocaleString()}</p>
                 <p className="mt-1">
                   <span className={`inline-block px-2 py-1 rounded text-white text-xs ${
-                    req.status === 'accepted'
-                      ? 'bg-green-600'
-                      : req.status === 'rejected'
-                      ? 'bg-red-600'
-                      : 'bg-yellow-500'
-                  }`}>
-                    {req.status}
-                  </span>
+                    req.status === 'accepted' ? 'bg-green-600' :
+                    req.status === 'rejected' ? 'bg-red-600' : 'bg-yellow-500'
+                  }`}>{req.status}</span>
                 </p>
               </div>
 

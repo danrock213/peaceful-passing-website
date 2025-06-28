@@ -11,7 +11,6 @@ interface PendingItem {
   type: 'vendor' | 'tribute';
   description?: string;
   submittedAt?: string;
-  [key: string]: any;
 }
 
 export default function PendingApprovalsPage() {
@@ -24,57 +23,54 @@ export default function PendingApprovalsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Role & auth check
-  useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
-        router.push('/sign-in');
-      } else if (user.publicMetadata?.role !== 'admin') {
-        alert('Access restricted to admins.');
-        router.push('/');
-      }
-    }
-  }, [user, isLoaded, router]);
+  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
 
-  // Fetch pending vendors and tributes
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) {
+      router.push('/sign-in');
+    } else if (!isAdmin) {
+      alert('Access restricted to admins.');
+      router.push('/');
+    }
+  }, [isLoaded, user, isAdmin, router]);
+
   useEffect(() => {
     async function fetchPending() {
+      if (!isAdmin) return;
+
       setLoading(true);
       setError(null);
+
       try {
-        // Pending vendors (approved = false)
-        const { data: vendors, error: vendorsError } = await supabase
+        const { data: vendors, error: vendorError } = await supabase
           .from('vendors')
           .select('id, name, description, created_at')
           .eq('approved', false);
 
-        if (vendorsError) throw vendorsError;
-
-        // Pending tributes? Assuming they have a 'status' or 'approved' column; 
-        // If not, you can customize this query
-        const { data: tributes, error: tributesError } = await supabase
+        const { data: tributes, error: tributeError } = await supabase
           .from('tributes')
           .select('id, title, description, created_at')
-          .is('approved', null); // Or some condition if you track approval on tributes
+          .is('approved', null);
 
-        if (tributesError) throw tributesError;
+        if (vendorError || tributeError) throw vendorError || tributeError;
 
-        // Combine and normalize
         const combined: PendingItem[] = [
-          ...(vendors?.map((v) => ({
+          ...(vendors || []).map((v) => ({
             id: v.id,
             name: v.name,
             type: 'vendor' as const,
             description: v.description,
             submittedAt: v.created_at,
-          })) || []),
-          ...(tributes?.map((t) => ({
+          })),
+          ...(tributes || []).map((t) => ({
             id: t.id,
             name: t.title,
             type: 'tribute' as const,
             description: t.description,
             submittedAt: t.created_at,
-          })) || []),
+          })),
         ];
 
         setPendingItems(combined);
@@ -85,38 +81,21 @@ export default function PendingApprovalsPage() {
       }
     }
 
-    if (isLoaded && user?.publicMetadata?.role === 'admin') {
-      fetchPending();
-    }
-  }, [isLoaded, user, supabase]);
+    fetchPending();
+  }, [isAdmin, supabase]);
 
   const handleApprove = async (item: PendingItem) => {
     setProcessingId(item.id);
-    setError(null);
-
     try {
-      if (item.type === 'vendor') {
-        // Approve vendor by setting approved = true
-        const { error: updateError } = await supabase
-          .from('vendors')
-          .update({ approved: true })
-          .eq('id', item.id);
+      const { error } = await supabase
+        .from(item.type === 'vendor' ? 'vendors' : 'tributes')
+        .update({ approved: true })
+        .eq('id', item.id);
 
-        if (updateError) throw updateError;
-      } else if (item.type === 'tribute') {
-        // For tributes, decide what "approve" means — here let's add an approved flag
-        const { error: updateError } = await supabase
-          .from('tributes')
-          .update({ approved: true })
-          .eq('id', item.id);
-
-        if (updateError) throw updateError;
-      }
-
+      if (error) throw error;
       setPendingItems((items) => items.filter((i) => i.id !== item.id));
-      alert(`${item.type === 'vendor' ? 'Vendor' : 'Tribute'} approved!`);
     } catch (e: any) {
-      setError(e.message || 'Failed to approve item');
+      setError(e.message || 'Approval failed');
     } finally {
       setProcessingId(null);
     }
@@ -124,50 +103,28 @@ export default function PendingApprovalsPage() {
 
   const handleReject = async (item: PendingItem) => {
     setProcessingId(item.id);
-    setError(null);
-
     try {
-      if (item.type === 'vendor') {
-        // Reject by deleting the vendor row (or you could add a rejected status)
-        const { error: deleteError } = await supabase
-          .from('vendors')
-          .delete()
-          .eq('id', item.id);
+      const { error } = await supabase
+        .from(item.type === 'vendor' ? 'vendors' : 'tributes')
+        .delete()
+        .eq('id', item.id);
 
-        if (deleteError) throw deleteError;
-      } else if (item.type === 'tribute') {
-        // Reject by deleting the tribute
-        const { error: deleteError } = await supabase
-          .from('tributes')
-          .delete()
-          .eq('id', item.id);
-
-        if (deleteError) throw deleteError;
-      }
-
+      if (error) throw error;
       setPendingItems((items) => items.filter((i) => i.id !== item.id));
-      alert(`${item.type === 'vendor' ? 'Vendor' : 'Tribute'} rejected.`);
     } catch (e: any) {
-      setError(e.message || 'Failed to reject item');
+      setError(e.message || 'Rejection failed');
     } finally {
       setProcessingId(null);
     }
   };
 
-  if (!user || user.publicMetadata?.role !== 'admin') {
-    return null;
-  }
+  if (!isAdmin) return null;
 
   return (
     <main className="max-w-4xl mx-auto py-10 px-6">
       <h1 className="text-3xl font-bold mb-6">Pending Approvals</h1>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded" role="alert">
-          {error}
-        </div>
-      )}
-
+      {error && <p className="mb-4 text-red-600">{error}</p>}
       {loading ? (
         <p>Loading pending items…</p>
       ) : pendingItems.length === 0 ? (
@@ -177,28 +134,27 @@ export default function PendingApprovalsPage() {
           {pendingItems.map((item) => (
             <li key={item.id} className="p-4 bg-white shadow rounded">
               <h2 className="text-xl font-semibold">{item.name}</h2>
-              <p className="text-sm text-gray-600">Type: {item.type}</p>
-              {item.description && <p className="mt-2">{item.description}</p>}
+              <p className="text-sm text-gray-600 capitalize">Type: {item.type}</p>
+              {item.description && <p className="mt-1">{item.description}</p>}
               {item.submittedAt && (
                 <p className="text-xs text-gray-500 mt-1">
                   Submitted: {new Date(item.submittedAt).toLocaleString()}
                 </p>
               )}
-
-              <div className="mt-4 flex gap-2">
+              <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => handleApprove(item)}
                   disabled={processingId === item.id}
                   className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 disabled:opacity-50"
                 >
-                  {processingId === item.id ? 'Approving…' : 'Approve'}
+                  Approve
                 </button>
                 <button
                   onClick={() => handleReject(item)}
                   disabled={processingId === item.id}
                   className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700 disabled:opacity-50"
                 >
-                  {processingId === item.id ? 'Rejecting…' : 'Reject'}
+                  Reject
                 </button>
               </div>
             </li>
