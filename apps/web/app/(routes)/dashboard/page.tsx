@@ -1,7 +1,7 @@
 // apps/web/app/dashboard/page.tsx
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';  // <-- changed here
+import { createClient } from '@/lib/supabase/server';
 import DashboardShell from './DashboardShell';
 import type { ChecklistItem, Vendor, Event, Activity } from '@/types/dashboard';
 
@@ -9,12 +9,12 @@ export default async function DashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/sign-in');
 
-  const supabase = createClient();  // <-- changed here
+  const supabase = createClient();
 
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
-    .eq('clerk_id', user.id) // string-based id!
+    .eq('clerk_id', user.id)
     .single();
 
   if (error) {
@@ -23,8 +23,14 @@ export default async function DashboardPage() {
 
   const role = profile?.role ?? 'user';
 
-  if (role === 'vendor') redirect('/vendors/dashboard');
-  if (role === 'admin') redirect('/admin/dashboard');
+  // Only redirect if not already on the correct route
+  const currentPath = '/dashboard'; // This file maps to /dashboard
+  if (role === 'vendor' && currentPath !== '/vendor/dashboard') {
+    redirect('/vendor/dashboard');
+  }
+  if (role === 'admin' && currentPath !== '/admin/dashboard') {
+    redirect('/admin/dashboard');
+  }
 
   const { data: userTributes } = await supabase
     .from('tributes')
