@@ -18,8 +18,10 @@ export default async function AdminDashboardPage() {
 
   if (profile?.role !== 'admin') redirect('/');
 
+  const name = user.firstName || 'Admin';
+
   // Fetch vendors
-  const { data: allVendorsRaw } = await supabase
+  const { data: allVendorsRaw, error: vendorError } = await supabase
     .from('vendors')
     .select('status');
 
@@ -27,10 +29,17 @@ export default async function AdminDashboardPage() {
   const totalVendors = allVendors.length;
   const pendingVendors = allVendors.filter((v) => v.status === 'pending').length;
 
-  // Mocked stats
-  const pendingTributes = 2;
-  const totalUsers = 103;
-  const name = user.firstName || 'Admin';
+  // Fetch tributes
+  const { data: tributeData } = await supabase
+    .from('tributes')
+    .select('approved');
+
+  const pendingTributes = (tributeData ?? []).filter((t) => t.approved === null).length;
+
+  // Fetch users
+  const { count: totalUsers } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true });
 
   // Fetch pending bookings
   const { data: bookingsRaw } = await supabase
@@ -50,7 +59,7 @@ export default async function AdminDashboardPage() {
         <StatCard label="Pending Vendors" value={pendingVendors} link="/admin/vendors" />
         <StatCard label="Total Vendors" value={totalVendors} />
         <StatCard label="Pending Tributes" value={pendingTributes} link="/admin/pending-approvals" />
-        <StatCard label="Registered Users" value={totalUsers} />
+        <StatCard label="Registered Users" value={totalUsers ?? 0} />
       </section>
 
       <section className="bg-white shadow-md p-6 rounded-lg border border-gray-100 mb-10">
@@ -59,6 +68,7 @@ export default async function AdminDashboardPage() {
           <li><Link href="/admin/vendors" className="text-[#1D3557] hover:underline">→ Review Vendor Submissions</Link></li>
           <li><Link href="/admin/pending-approvals" className="text-[#1D3557] hover:underline">→ Review Tribute Approvals</Link></li>
           <li><Link href="/admin/bookings" className="text-[#1D3557] hover:underline">→ Review Booking Requests</Link></li>
+          <li><Link href="/admin/activity" className="text-[#1D3557] hover:underline">→ View Admin Activity Log</Link></li>
           <li><Link href="/vendors/new" className="text-[#1D3557] hover:underline">→ Add a Vendor (manually)</Link></li>
         </ul>
       </section>

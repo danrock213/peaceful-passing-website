@@ -50,6 +50,15 @@ export default function AdminVendorListPage() {
     fetchVendors();
   }, [isAdmin]);
 
+  const logAdminAction = async (action: string, details: string) => {
+    if (!user) return;
+    await supabase.from('admin_activity_logs').insert({
+      admin_id: user.id,
+      action,
+      details,
+    });
+  };
+
   const handleUpdateStatus = async (id: string, status: VendorStatus) => {
     const { data, error } = await supabase
       .from('vendors')
@@ -63,6 +72,12 @@ export default function AdminVendorListPage() {
     }
 
     if (data && data.length > 0) {
+      const updatedVendor = data[0];
+      await logAdminAction(
+        `vendor.${status}`,
+        `Vendor "${updatedVendor.name}" marked as ${status}`
+      );
+
       setVendors((prev) =>
         prev.map((v) => (v.id === id ? { ...v, status } : v))
       );

@@ -1,29 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-interface PendingItem {
+type Tribute = {
   id: string;
-  name: string;
-  type: 'vendor' | 'tribute';
-  description?: string;
-  submittedAt?: string;
-}
+  title: string;
+  description: string;
+  created_at: string;
+  approved: boolean | null;
+};
 
 export default function PendingApprovalsPage() {
   const supabase = createClientComponentClient();
   const { user, isLoaded } = useUser();
   const router = useRouter();
 
-  const [pendingItems, setPendingItems] = useState<PendingItem[]>([]);
+  const [tributes, setTributes] = useState<Tribute[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
+  const isAdmin = user?.publicMetadata?.role === 'admin';
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -31,130 +31,104 @@ export default function PendingApprovalsPage() {
     if (!user) {
       router.push('/sign-in');
     } else if (!isAdmin) {
-      alert('Access restricted to admins.');
       router.push('/');
     }
-  }, [isLoaded, user, isAdmin, router]);
+  }, [isLoaded, user, router, isAdmin]);
 
   useEffect(() => {
-    async function fetchPending() {
-      if (!isAdmin) return;
-
+    const fetchPendingTributes = async () => {
       setLoading(true);
       setError(null);
 
-      try {
-        const { data: vendors, error: vendorError } = await supabase
-          .from('vendors')
-          .select('id, name, description, created_at')
-          .eq('approved', false);
+      const { data, error } = await supabase
+        .from('tributes')
+        .select('*')
+        .is('approved', null)
+        .order('created_at', { ascending: false });
 
-        const { data: tributes, error: tributeError } = await supabase
-          .from('tributes')
-          .select('id, title, description, created_at')
-          .is('approved', null);
-
-        if (vendorError || tributeError) throw vendorError || tributeError;
-
-        const combined: PendingItem[] = [
-          ...(vendors || []).map((v) => ({
-            id: v.id,
-            name: v.name,
-            type: 'vendor' as const,
-            description: v.description,
-            submittedAt: v.created_at,
-          })),
-          ...(tributes || []).map((t) => ({
-            id: t.id,
-            name: t.title,
-            type: 'tribute' as const,
-            description: t.description,
-            submittedAt: t.created_at,
-          })),
-        ];
-
-        setPendingItems(combined);
-      } catch (e: any) {
-        setError(e.message || 'Failed to fetch pending items');
-      } finally {
-        setLoading(false);
+      if (error) {
+        setError(error.message);
+      } else {
+        setTributes(data ?? []);
       }
+
+      setLoading(false);
+    };
+
+    if (isLoaded && isAdmin) {
+      fetchPendingTributes();
     }
+  }, [isLoaded, isAdmin]);
 
-    fetchPending();
-  }, [isAdmin, supabase]);
-
-  const handleApprove = async (item: PendingItem) => {
-    setProcessingId(item.id);
-    try {
-      const { error } = await supabase
-        .from(item.type === 'vendor' ? 'vendors' : 'tributes')
-        .update({ approved: true })
-        .eq('id', item.id);
-
-      if (error) throw error;
-      setPendingItems((items) => items.filter((i) => i.id !== item.id));
-    } catch (e: any) {
-      setError(e.message || 'Approval failed');
-    } finally {
-      setProcessingId(null);
-    }
+  const logAdminAction = async (action: string, details: string) => {
+    if (!user) return;
+    await supabase.from('admin_activity_logs').insert({
+      admin_id: user.id,
+      action,
+      details,
+    });
   };
 
-  const handleReject = async (item: PendingItem) => {
-    setProcessingId(item.id);
-    try {
-      const { error } = await supabase
-        .from(item.type === 'vendor' ? 'vendors' : 'tributes')
-        .delete()
-        .eq('id', item.id);
+  const handleStatusChange = async (id: string, status: 'approved' | 'rejected') => {
+    setProcessingId(id);
+    const approvedValue = status === 'approved';
 
-      if (error) throw error;
-      setPendingItems((items) => items.filter((i) => i.id !== item.id));
-    } catch (e: any) {
-      setError(e.message || 'Rejection failed');
-    } finally {
-      setProcessingId(null);
+    const { error } = await supabase
+      .from('tributes')
+      .update({ approved: approvedValue })
+      .eq('id', id);
+
+    if (error) {
+      alert('Failed to update status.');
+    } else {
+      await logAdminAction(`tribute.${status}`, `Marked tribute ID ${id} as ${status}`);
+      setTributes((prev) => prev.filter((t) => t.id !== id));
     }
+
+    setProcessingId(null);
   };
 
+  if (!isLoaded) return <p className="p-6">Loading user…</p>;
   if (!isAdmin) return null;
 
   return (
     <main className="max-w-4xl mx-auto py-10 px-6">
-      <h1 className="text-3xl font-bold mb-6">Pending Approvals</h1>
+      <h1 className="text-3xl font-bold mb-6 text-[#1D3557]">Pending Tribute Approvals</h1>
 
-      {error && <p className="mb-4 text-red-600">{error}</p>}
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
       {loading ? (
-        <p>Loading pending items…</p>
-      ) : pendingItems.length === 0 ? (
-        <p>No pending items.</p>
+        <p>Loading tributes…</p>
+      ) : tributes.length === 0 ? (
+        <p className="text-gray-500">No pending tributes found.</p>
       ) : (
         <ul className="space-y-4">
-          {pendingItems.map((item) => (
-            <li key={item.id} className="p-4 bg-white shadow rounded">
-              <h2 className="text-xl font-semibold">{item.name}</h2>
-              <p className="text-sm text-gray-600 capitalize">Type: {item.type}</p>
-              {item.description && <p className="mt-1">{item.description}</p>}
-              {item.submittedAt && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Submitted: {new Date(item.submittedAt).toLocaleString()}
-                </p>
-              )}
+          {tributes.map((t) => (
+            <li key={t.id} className="p-4 bg-white border rounded shadow-sm">
+              <h2 className="text-lg font-semibold">{t.title}</h2>
+              <p className="text-sm text-gray-600">{t.description?.slice(0, 120)}…</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Submitted: {new Date(t.created_at).toLocaleString()}
+              </p>
+
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={() => handleApprove(item)}
-                  disabled={processingId === item.id}
                   className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 disabled:opacity-50"
+                  onClick={() => handleStatusChange(t.id, 'approved')}
+                  disabled={processingId === t.id}
                 >
-                  Approve
+                  {processingId === t.id ? 'Approving…' : 'Approve'}
                 </button>
                 <button
-                  onClick={() => handleReject(item)}
-                  disabled={processingId === item.id}
                   className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700 disabled:opacity-50"
+                  onClick={() => handleStatusChange(t.id, 'rejected')}
+                  disabled={processingId === t.id}
                 >
-                  Reject
+                  {processingId === t.id ? 'Rejecting…' : 'Reject'}
                 </button>
               </div>
             </li>

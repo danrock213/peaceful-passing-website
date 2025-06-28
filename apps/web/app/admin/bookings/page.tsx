@@ -41,6 +41,15 @@ export default function AdminBookingsPage() {
     fetchRequests();
   }, [isAdmin]);
 
+  const logAdminAction = async (action: string, details: string) => {
+    if (!user) return;
+    await supabase.from('admin_activity_logs').insert({
+      admin_id: user.id,
+      action,
+      details,
+    });
+  };
+
   const updateStatus = async (id: string, newStatus: 'accepted' | 'rejected') => {
     setUpdatingId(id);
 
@@ -53,6 +62,12 @@ export default function AdminBookingsPage() {
       alert('Failed to update status');
       console.error(error);
     } else {
+      const request = requests.find((r) => r.id === id);
+      await logAdminAction(
+        `booking.${newStatus}`,
+        `Booking request for ${request?.name || 'Unknown'} (${id}) marked as ${newStatus}`
+      );
+
       await fetch('/api/notify-booking-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
