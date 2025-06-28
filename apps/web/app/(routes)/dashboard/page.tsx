@@ -1,26 +1,24 @@
+// apps/web/app/dashboard/page.tsx
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';  // <-- changed here
 import DashboardShell from './DashboardShell';
-import type { Tribute } from '@/types/tribute';
 import type { ChecklistItem, Vendor, Event, Activity } from '@/types/dashboard';
 
 export default async function DashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/sign-in');
 
-  const supabase = createClient();
+  const supabase = createClient();  // <-- changed here
 
-  // Fetch the user's role from Supabase profiles table by clerk_id
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
-    .eq('clerk_id', user.id)
+    .eq('clerk_id', user.id) // string-based id!
     .single();
 
-  if (profileError) {
-    console.error('Error fetching user profile role:', profileError.message);
-    // Optionally, handle error or fallback here
+  if (error) {
+    console.error('Error fetching user role:', error.message);
   }
 
   const role = profile?.role ?? 'user';
@@ -28,16 +26,11 @@ export default async function DashboardPage() {
   if (role === 'vendor') redirect('/vendors/dashboard');
   if (role === 'admin') redirect('/admin/dashboard');
 
-  // Fetch tributes for the current user using Clerk user id
-  const { data: userTributes, error: tributesError } = await supabase
+  const { data: userTributes } = await supabase
     .from('tributes')
     .select('*')
     .eq('created_by', user.id)
     .order('created_at', { ascending: false });
-
-  if (tributesError) {
-    console.error('Error fetching tributes:', tributesError.message);
-  }
 
   const checklist: ChecklistItem[] = [
     { id: '1', title: 'Notify family members', dueDate: '2025-06-20', checked: false },
@@ -52,7 +45,7 @@ export default async function DashboardPage() {
     { id: 'v3', name: 'Memorial Transport', type: 'Transportation', booked: true },
   ];
 
-  const allVendorTypes: string[] = ['Funeral Home', 'Florist', 'Transportation', 'Crematorium', 'Grief Counselor'];
+  const allVendorTypes = ['Funeral Home', 'Florist', 'Transportation', 'Crematorium', 'Grief Counselor'];
 
   const events: Event[] = [
     { id: 'e1', title: 'Memorial Service', date: '2025-07-01' },

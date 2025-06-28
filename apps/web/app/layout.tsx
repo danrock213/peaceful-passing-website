@@ -1,3 +1,4 @@
+// apps/web/app/layout.tsx
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import ClientLayout from './ClientLayout';
