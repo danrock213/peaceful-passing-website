@@ -12,27 +12,29 @@ export default async function AdminDashboardPage() {
 
   const supabase = createClient();
 
-  // Fetch vendor stats
-  const { data: allVendors, error: vendorError } = await supabase
+  // ✅ Fetch vendor stats with null safety
+  const { data: allVendorsRaw, error: vendorError } = await supabase
     .from('vendors')
     .select('status');
 
-  const totalVendors = allVendors?.length || 0;
-  const pendingVendors = allVendors?.filter((v) => v.status === 'pending').length || 0;
+  const allVendors = allVendorsRaw ?? [];
+  const totalVendors = allVendors.length;
+  const pendingVendors = allVendors.filter((v) => v.status === 'pending').length;
 
   // Mocked user stats
   const pendingTributes = 2;
   const totalUsers = 103;
-
   const name = user.firstName || 'Admin';
 
-  // Fetch recent pending booking requests
-  const { data: bookings, error: bookingsError } = await supabase
+  // ✅ Fetch recent pending booking requests with null safety
+  const { data: bookingsRaw, error: bookingsError } = await supabase
     .from('booking_requests')
     .select('*')
     .eq('status', 'pending')
     .order('date', { ascending: false })
     .limit(5);
+
+  const bookings = bookingsRaw ?? [];
 
   async function approveBooking(id: string, newStatus: 'accepted' | 'rejected') {
     'use server';
@@ -41,15 +43,13 @@ export default async function AdminDashboardPage() {
     await fetch('http://localhost:3000/api/notify-booking-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId: id, newStatus })
+      body: JSON.stringify({ requestId: id, newStatus }),
     });
   }
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-[#1D3557] mb-6">
-        Welcome, {name} 👋
-      </h1>
+      <h1 className="text-3xl font-bold text-[#1D3557] mb-6">Welcome, {name} 👋</h1>
 
       <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
         <StatCard label="Pending Vendors" value={pendingVendors} link="/admin/vendors" />
@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
         </ul>
       </section>
 
-      {bookings && bookings.length > 0 && (
+      {bookings.length > 0 && (
         <section className="bg-white shadow-md p-6 rounded-lg border border-gray-100">
           <h2 className="text-xl font-semibold text-[#1D3557] mb-4">Pending Booking Requests</h2>
           <ul className="space-y-4">
@@ -94,8 +94,12 @@ export default async function AdminDashboardPage() {
                 className="p-4 border rounded bg-gray-50 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
               >
                 <div>
-                  <p className="font-semibold">{req.name} ({req.email})</p>
-                  <p className="text-sm text-gray-600">Vendor ID: <code>{req.vendor_id}</code></p>
+                  <p className="font-semibold">
+                    {req.name} ({req.email})
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Vendor ID: <code>{req.vendor_id}</code>
+                  </p>
                   <p className="text-sm text-gray-500">
                     Requested on {new Date(req.date).toLocaleString()}
                   </p>
@@ -121,7 +125,15 @@ export default async function AdminDashboardPage() {
   );
 }
 
-function StatCard({ label, value, link }: { label: string; value: number; link?: string }) {
+function StatCard({
+  label,
+  value,
+  link,
+}: {
+  label: string;
+  value: number;
+  link?: string;
+}) {
   const content = (
     <div className="p-4 rounded-lg shadow bg-white border border-gray-200 text-center">
       <p className="text-2xl font-bold text-[#1D3557]">{value}</p>

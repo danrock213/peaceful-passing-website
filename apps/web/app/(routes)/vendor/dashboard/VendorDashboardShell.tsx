@@ -1,4 +1,3 @@
-// app/vendor/dashboard/VendorDashboardShell.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -28,56 +27,47 @@ export default function VendorDashboardShell({
     <main className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">Welcome, {businessName}!</h1>
 
-      <section className="mb-6 grid grid-cols-3 gap-4">
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="text-lg font-semibold">Views</h2>
-          <p className="text-2xl">{stats.views}</p>
-        </div>
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="text-lg font-semibold">Leads</h2>
-          <p className="text-2xl">{stats.leads}</p>
-        </div>
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="text-lg font-semibold">Approved</h2>
-          <p className="text-2xl">{stats.approved ? '✅' : '❌'}</p>
-        </div>
+      <section className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard label="Views" value={stats.views} />
+        <StatCard label="Leads" value={stats.leads} />
+        <StatCard label="Approved" value={stats.approved ? '✅' : '❌'} />
       </section>
 
-      <section className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Your Listings</h2>
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Your Listings</h2>
         {vendorListings.length > 0 ? (
-          <ul className="space-y-4 divide-y">
-            {vendorListings.map((item) => (
-              <li key={item.id} className="py-4 flex justify-between items-center">
+          <ul className="space-y-4">
+            {vendorListings.map((listing) => (
+              <li key={listing.id} className="flex justify-between items-center border rounded p-4 bg-white">
                 <div>
-                  <p className="font-bold">{item.title}</p>
-                  <p className="text-sm text-gray-500">{item.category} — {item.location}</p>
+                  <p className="font-bold">{listing.title}</p>
+                  <p className="text-sm text-gray-500">{listing.category} — {listing.location}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex gap-2">
                   <button
+                    onClick={() => router.push(`/vendor/listings/edit?id=${listing.id}`)}
                     className="px-3 py-1 border rounded hover:bg-gray-100"
-                    onClick={() => router.push(`/vendor/listings/edit?id=${item.id}`)}
                   >
                     Edit
                   </button>
                   <button
-                    className="px-3 py-1 border rounded hover:bg-gray-100"
                     onClick={() => {
                       setVendorListings((prev) =>
                         prev.map((l) =>
-                          l.id === item.id ? { ...l, active: !l.active } : l
+                          l.id === listing.id ? { ...l, active: !l.active } : l
                         )
                       );
                     }}
+                    className="px-3 py-1 border rounded hover:bg-gray-100"
                   >
-                    {item.active ? 'Deactivate' : 'Activate'}
+                    {listing.active ? 'Deactivate' : 'Activate'}
                   </button>
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p>You haven’t added any listings yet.</p>
+          <p className="text-gray-600">You haven’t added any listings yet.</p>
         )}
         <button
           onClick={() => router.push('/vendor/listings/edit')}
@@ -87,5 +77,14 @@ export default function VendorDashboardShell({
         </button>
       </section>
     </main>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="p-4 bg-white border rounded shadow text-center">
+      <h3 className="text-sm font-medium text-gray-500">{label}</h3>
+      <p className="text-2xl font-bold text-gray-800">{value}</p>
+    </div>
   );
 }

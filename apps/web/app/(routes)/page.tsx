@@ -1,4 +1,3 @@
-// apps/web/app/page.tsx
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -10,25 +9,24 @@ export default async function HomePage() {
 
   if (user) {
     const supabase = createClient();
-    const { data, error } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('clerk_id', user.id)
       .single();
 
-    const role = data?.role ?? 'user';
+    const role = profile?.role ?? 'user';
 
+    // Immediately redirect to appropriate dashboard
     if (role === 'admin') redirect('/admin/dashboard');
-    if (role === 'vendor') redirect('/vendors/dashboard');
-    redirect('/dashboard');
+    if (role === 'vendor') redirect('/vendor/dashboard');
+    redirect('/dashboard'); // default user
   }
 
-  // Public homepage for signed-out users
   return (
     <div className="min-h-screen bg-[#EAF4FF] flex flex-col">
       {/* Hero */}
       <section className="flex flex-col items-center justify-center flex-grow text-center px-6 py-2 max-w-4xl mx-auto">
-        {/* Logo, Name, and Tagline */}
         <div className="bg-white rounded-2xl p-10 shadow-lg flex flex-col items-center mb-10 w-full max-w-md mx-auto">
           <Image src="/logo.png" alt="Starlit Passage Logo" width={200} height={200} />
           <h1 className="mt-4 text-4xl font-extrabold text-[#1D3557]">Starlit Passage</h1>
@@ -56,7 +54,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="bg-white py-16">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 text-center">
           <FeatureCard

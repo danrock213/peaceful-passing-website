@@ -1,4 +1,3 @@
-// apps/web/app/dashboard/page.tsx
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -10,7 +9,6 @@ export default async function DashboardPage() {
   if (!user) redirect('/sign-in');
 
   const supabase = createClient();
-
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
@@ -23,15 +21,11 @@ export default async function DashboardPage() {
 
   const role = profile?.role ?? 'user';
 
-  // Only redirect if not already on the correct route
-  const currentPath = '/dashboard'; // This file maps to /dashboard
-  if (role === 'vendor' && currentPath !== '/vendor/dashboard') {
-    redirect('/vendor/dashboard');
-  }
-  if (role === 'admin' && currentPath !== '/admin/dashboard') {
-    redirect('/admin/dashboard');
-  }
+  // Redirect away from /dashboard if this user shouldn't be here
+  if (role === 'vendor') redirect('/vendor/dashboard');
+  if (role === 'admin') redirect('/admin/dashboard');
 
+  // Default: user
   const { data: userTributes } = await supabase
     .from('tributes')
     .select('*')
