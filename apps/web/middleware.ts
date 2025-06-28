@@ -25,6 +25,11 @@ export default authMiddleware({
   },
 });
 
+// ✅ Updated matcher to explicitly exclude static files
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!.+\\.[\\w]+$|_next|favicon.ico).*)',
+    '/',
+    '/(api|trpc)(.*)',
+  ],
 };
