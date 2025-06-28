@@ -34,15 +34,16 @@ export default function AdminBookingsPage() {
 
       if (error) {
         console.error('Failed to fetch booking requests:', error.message);
+        setRequests([]);
       } else {
-        setRequests(data || []);
+        setRequests(data ?? []);
       }
 
       setLoading(false);
     };
 
     fetchRequests();
-  }, [supabase, isLoaded, isAdmin]);
+  }, [isLoaded, isAdmin]);
 
   const updateStatus = async (id: string, newStatus: 'accepted' | 'rejected') => {
     setUpdatingId(id);
@@ -59,20 +60,19 @@ export default function AdminBookingsPage() {
       return;
     }
 
-    // Call the notification API
-    const response = await fetch('/api/notify-booking-status', {
+    const res = await fetch('/api/notify-booking-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requestId: id, newStatus }),
     });
 
-    if (!response.ok) {
-      alert('Failed to send notification email.');
-      console.error(await response.text());
+    if (!res.ok) {
+      alert('Notification failed');
+      console.error(await res.text());
     }
 
     setRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: newStatus } : req))
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
     );
     setUpdatingId(null);
   };
@@ -123,14 +123,14 @@ export default function AdminBookingsPage() {
                     disabled={updatingId === req.id}
                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
                   >
-                    Approve
+                    {updatingId === req.id ? 'Processing...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => updateStatus(req.id, 'rejected')}
                     disabled={updatingId === req.id}
                     className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
                   >
-                    Reject
+                    {updatingId === req.id ? 'Processing...' : 'Reject'}
                   </button>
                 </div>
               )}

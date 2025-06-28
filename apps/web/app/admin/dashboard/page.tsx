@@ -5,15 +5,21 @@ import { createClient } from '@/lib/supabase/server';
 
 export default async function AdminDashboardPage() {
   const user = await currentUser();
-
-  if (!user || user.publicMetadata?.role !== 'admin') {
-    redirect('/');
-  }
+  if (!user) redirect('/');
 
   const supabase = createClient();
 
-  // ✅ Fetch vendor stats with null safety
-  const { data: allVendorsRaw, error: vendorError } = await supabase
+  // Fetch role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('clerk_id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') redirect('/');
+
+  // Fetch vendors
+  const { data: allVendorsRaw } = await supabase
     .from('vendors')
     .select('status');
 
@@ -21,13 +27,13 @@ export default async function AdminDashboardPage() {
   const totalVendors = allVendors.length;
   const pendingVendors = allVendors.filter((v) => v.status === 'pending').length;
 
-  // Mocked user stats
+  // Mocked stats
   const pendingTributes = 2;
   const totalUsers = 103;
   const name = user.firstName || 'Admin';
 
-  // ✅ Fetch recent pending booking requests with null safety
-  const { data: bookingsRaw, error: bookingsError } = await supabase
+  // Fetch pending bookings
+  const { data: bookingsRaw } = await supabase
     .from('booking_requests')
     .select('*')
     .eq('status', 'pending')
@@ -35,17 +41,6 @@ export default async function AdminDashboardPage() {
     .limit(5);
 
   const bookings = bookingsRaw ?? [];
-
-  async function approveBooking(id: string, newStatus: 'accepted' | 'rejected') {
-    'use server';
-    const supabase = createClient();
-    await supabase.from('booking_requests').update({ status: newStatus }).eq('id', id);
-    await fetch('http://localhost:3000/api/notify-booking-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ requestId: id, newStatus }),
-    });
-  }
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
@@ -61,26 +56,10 @@ export default async function AdminDashboardPage() {
       <section className="bg-white shadow-md p-6 rounded-lg border border-gray-100 mb-10">
         <h2 className="text-xl font-semibold text-[#1D3557] mb-4">Quick Actions</h2>
         <ul className="space-y-2">
-          <li>
-            <Link href="/admin/vendors" className="text-[#1D3557] hover:underline">
-              → Review Vendor Submissions
-            </Link>
-          </li>
-          <li>
-            <Link href="/admin/pending-approvals" className="text-[#1D3557] hover:underline">
-              → Review Tribute Approvals
-            </Link>
-          </li>
-          <li>
-            <Link href="/admin/bookings" className="text-[#1D3557] hover:underline">
-              → Review Booking Requests
-            </Link>
-          </li>
-          <li>
-            <Link href="/vendors/new" className="text-[#1D3557] hover:underline">
-              → Add a Vendor (manually)
-            </Link>
-          </li>
+          <li><Link href="/admin/vendors" className="text-[#1D3557] hover:underline">→ Review Vendor Submissions</Link></li>
+          <li><Link href="/admin/pending-approvals" className="text-[#1D3557] hover:underline">→ Review Tribute Approvals</Link></li>
+          <li><Link href="/admin/bookings" className="text-[#1D3557] hover:underline">→ Review Booking Requests</Link></li>
+          <li><Link href="/vendors/new" className="text-[#1D3557] hover:underline">→ Add a Vendor (manually)</Link></li>
         </ul>
       </section>
 
@@ -94,26 +73,16 @@ export default async function AdminDashboardPage() {
                 className="p-4 border rounded bg-gray-50 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
               >
                 <div>
-                  <p className="font-semibold">
-                    {req.name} ({req.email})
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Vendor ID: <code>{req.vendor_id}</code>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Requested on {new Date(req.date).toLocaleString()}
-                  </p>
+                  <p className="font-semibold">{req.name} ({req.email})</p>
+                  <p className="text-sm text-gray-600">Vendor ID: <code>{req.vendor_id}</code></p>
+                  <p className="text-sm text-gray-500">Requested on {new Date(req.date).toLocaleString()}</p>
                 </div>
                 <div className="flex gap-2">
-                  <form action={async () => approveBooking(req.id, 'accepted')}>
-                    <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">
-                      Approve
-                    </button>
+                  <form action={`/admin/actions/approve-booking?id=${req.id}&status=accepted`} method="post">
+                    <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">Approve</button>
                   </form>
-                  <form action={async () => approveBooking(req.id, 'rejected')}>
-                    <button className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">
-                      Reject
-                    </button>
+                  <form action={`/admin/actions/approve-booking?id=${req.id}&status=rejected`} method="post">
+                    <button className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">Reject</button>
                   </form>
                 </div>
               </li>
@@ -140,6 +109,5 @@ function StatCard({
       <p className="text-sm text-gray-600 mt-1">{label}</p>
     </div>
   );
-
   return link ? <Link href={link}>{content}</Link> : content;
 }

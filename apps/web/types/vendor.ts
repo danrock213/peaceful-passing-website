@@ -24,9 +24,10 @@ export interface Message {
   sender: string;
   sender_type: SenderType;
   content: string;
-  date: string;
+  created_at: string; // ✅ FIX: use the column name from Supabase
   read: boolean;
 }
+
 
 export interface Vendor {
   id: string;

@@ -40,7 +40,7 @@ export default function VendorMessagesDashboard() {
         .from('messages')
         .select('*')
         .eq('vendor_id', vendorData.id)
-        .order('date', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (messagesError) {
         setError('Failed to load messages.');
@@ -72,7 +72,7 @@ export default function VendorMessagesDashboard() {
         sender: vendor.name || 'Vendor',
         sender_type: 'vendor',
         content: reply,
-        date: new Date().toISOString(),
+        created_at: new Date().toISOString(),
         read: false,
       },
     ]);
@@ -84,7 +84,7 @@ export default function VendorMessagesDashboard() {
         .from('messages')
         .select('*')
         .eq('vendor_id', vendor.id)
-        .order('date', { ascending: true });
+        .order('created_at', { ascending: true });
 
       setMessages(data ?? []);
       setReplyText((prev) => ({ ...prev, [sender]: '' }));
@@ -114,7 +114,7 @@ export default function VendorMessagesDashboard() {
                   <li key={msg.id}>
                     <p className="text-sm text-gray-600">
                       <strong>{msg.sender_type === 'vendor' ? 'You' : msg.sender}</strong>{' '}
-                      <span className="text-gray-400 text-xs">({new Date(msg.date).toLocaleString()})</span>
+                      <span className="text-gray-400 text-xs">({new Date(msg.created_at).toLocaleString()})</span>
                     </p>
                     <p className="text-gray-800 whitespace-pre-line">{msg.content}</p>
                   </li>
