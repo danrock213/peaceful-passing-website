@@ -1,39 +1,43 @@
-// app/vendor-auth/page.tsx
-import { auth } from "@clerk/nextjs";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+'use client';
 
-export default async function VendorAuthPage() {
-  const { userId } = auth();
-  if (!userId) redirect("/sign-in");
+import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 
-  const supabase = createClient();
+export default function VendorAuthClient() {
+  const { isSignedIn, isLoaded, user } = useUser();
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
 
-  // Fetch role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
+  useEffect(() => {
+    if (!isLoaded) return;
 
-  // Assign vendor role if missing or incorrect
-  if (!profile || profile.role !== "vendor") {
-    await supabase
-      .from("profiles")
-      .update({ role: "vendor" })
-      .eq("id", userId);
-  }
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
 
-  // Check if vendor already has a vendor profile
-  const { data: vendor } = await supabase
-    .from("vendors")
-    .select("id")
-    .eq("created_by", userId)
-    .maybeSingle();
+    const syncAndRedirect = async () => {
+      setRedirecting(true);
 
-  if (vendor) {
-    redirect("/vendor/bookings"); // Existing vendor
-  } else {
-    redirect("/vendors/create"); // New vendor onboarding
-  }
+      const res = await fetch('/api/vendor-sync', { method: 'POST' });
+      const { hasVendorProfile } = await res.json();
+
+      if (hasVendorProfile) {
+        router.push('/vendor/bookings');
+      } else {
+        router.push('/vendors/create');
+      }
+    };
+
+    syncAndRedirect();
+  }, [isLoaded, isSignedIn, user, router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-sm text-gray-600">
+        {redirecting ? 'Redirecting…' : 'Checking your vendor setup…'}
+      </p>
+    </div>
+  );
 }
