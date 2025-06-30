@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
-export default function VendorAuthClient() {
-  const { isSignedIn, isLoaded, user } = useUser();
+export default function VendorAuthPage() {
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'checking' | 'redirecting' | 'error'>('idle');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -18,25 +18,28 @@ export default function VendorAuthClient() {
     }
 
     const syncAndRedirect = async () => {
-      setRedirecting(true);
-
-      const res = await fetch('/api/vendor-sync', { method: 'POST' });
-      const { hasVendorProfile } = await res.json();
-
-      if (hasVendorProfile) {
-        router.push('/vendor/bookings');
-      } else {
-        router.push('/vendors/create');
+      setStatus('checking');
+      try {
+        const res = await fetch('/api/vendor-sync', { method: 'POST' });
+        const { hasVendorProfile } = await res.json();
+        setStatus('redirecting');
+        router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+      } catch (err) {
+        console.error('Vendor sync failed', err);
+        setStatus('error');
       }
     };
 
     syncAndRedirect();
-  }, [isLoaded, isSignedIn, user, router]);
+  }, [isLoaded, isSignedIn, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-sm text-gray-600">
-        {redirecting ? 'Redirecting…' : 'Checking your vendor setup…'}
+        {status === 'idle' && 'Initializing...'}
+        {status === 'checking' && 'Checking your vendor status...'}
+        {status === 'redirecting' && 'Redirecting you now...'}
+        {status === 'error' && 'Something went wrong. Please try again later.'}
       </p>
     </div>
   );

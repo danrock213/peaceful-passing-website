@@ -1,4 +1,3 @@
-// apps/web/app/api/vendor-sync/route.ts
 import { auth } from '@clerk/nextjs';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
@@ -11,7 +10,7 @@ export async function POST() {
 
   const supabase = createClient();
 
-  // Check or set vendor role
+  // Ensure vendor role
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
