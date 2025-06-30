@@ -173,15 +173,13 @@ export default function Header() {
             </SignedIn>
           </div>
 
-          <SignedOut>
-            <Link
-              href="/vendor-auth"
-              className="text-xs text-gray-500 hover:text-[#1D3557] whitespace-nowrap mt-1"
-              style={{ maxWidth: 234 }}
-            >
-              Are you a vendor? Sign in here
-            </Link>
-          </SignedOut>
+          <Link
+            href="/vendor-auth"
+            className="text-xs text-gray-500 hover:text-[#1D3557] whitespace-nowrap mt-1"
+            style={{ maxWidth: 234 }}
+          >
+            Are you a vendor? Sign in here
+          </Link>
         </div>
       </nav>
     </header>
