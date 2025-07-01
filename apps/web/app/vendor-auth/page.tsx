@@ -22,8 +22,12 @@ export default function VendorAuthPage() {
 
       if (role !== 'vendor') {
         await clerk.user?.update({
-          publicMetadata: {
+          public_metadata: {
             role: 'vendor',
+    },
+  });
+}
+
           },
         });
       }
