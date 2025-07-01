@@ -1,8 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import type { WebhookEvent } from '@clerk/nextjs/server';
 
 export async function POST(req: Request) {
-  const payload = await req.json();
+  const payload = (await req.json()) as WebhookEvent;
+
+  if (payload.type !== 'user.created') {
+    return NextResponse.json({ message: 'Event ignored' }, { status: 200 });
+  }
 
   const clerkUserId = payload?.data?.id;
   const role = payload?.data?.public_metadata?.role ?? 'user';
