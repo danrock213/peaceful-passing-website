@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function VendorAuthPage() {
   const { user, isLoaded, isSignedIn } = useUser();
-  const { clerk } = useClerk();
+  const clerk = useClerk();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,7 +18,6 @@ export default function VendorAuthPage() {
     }
 
     const syncVendorRole = async () => {
-      // 1. Add Clerk metadata (if not already set)
       const role = (user?.publicMetadata as any)?.role;
 
       if (role !== 'vendor') {
@@ -29,7 +28,6 @@ export default function VendorAuthPage() {
         });
       }
 
-      // 2. Sync with Supabase
       const res = await fetch('/api/vendor-sync', { method: 'POST' });
       const { hasVendorProfile } = await res.json();
 
