@@ -9,13 +9,14 @@ export default function VendorSignUpPage() {
         path="/sign-up/vendor"
         routing="path"
         redirectUrl="/vendor-auth"
-        // 👇 Correct way to set metadata
-        initialValues={{
-          // @ts-ignore: publicMetadata is valid at runtime
-          publicMetadata: {
-            role: 'vendor',
-          },
-        }}
+        initialValues={
+          {
+            // `publicMetadata` is valid at runtime but not yet typed, so we cast
+            publicMetadata: {
+              role: 'vendor',
+            },
+          } as any
+        }
       />
     </div>
   );
