@@ -5,8 +5,11 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 export async function POST(req: Request) {
   const payload = (await req.json()) as WebhookEvent;
 
+  // Optional debug logging
+  console.log('Webhook Payload:', JSON.stringify(payload, null, 2));
+
   if (payload.type !== 'user.created') {
-    return NextResponse.json({ message: 'Event ignored' }, { status: 200 });
+    return NextResponse.json({ message: 'Ignored non-user.created event' }, { status: 200 });
   }
 
   const clerkUserId = payload?.data?.id;
@@ -17,7 +20,6 @@ export async function POST(req: Request) {
   }
 
   const supabase = createClient();
-
   const { error } = await supabase.from('profiles').insert({
     id: clerkUserId,
     role,
@@ -25,7 +27,7 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error('Supabase insert error:', error);
-    return NextResponse.json({ error: 'Failed to insert user' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to insert user', detail: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });
