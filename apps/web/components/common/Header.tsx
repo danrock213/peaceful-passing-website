@@ -65,54 +65,14 @@ export default function Header() {
                 Vendors ▾
               </button>
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link
-                  href="/vendors"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  All Vendors
-                </Link>
-                <Link
-                  href="/vendors/funeral-homes"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Funeral Homes
-                </Link>
-                <Link
-                  href="/vendors/crematoriums"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Crematoriums
-                </Link>
-                <Link
-                  href="/vendors/florists"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Florists
-                </Link>
-                <Link
-                  href="/vendors/grief-counselors"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Grief Counselors
-                </Link>
-                <Link
-                  href="/vendors/estate-lawyers"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Estate Lawyers
-                </Link>
-                <Link
-                  href="/vendors/memorial-products"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Memorial Products
-                </Link>
-                <Link
-                  href="/vendors/event-venues"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Event Venues
-                </Link>
+                <Link href="/vendors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Vendors</Link>
+                <Link href="/vendors/funeral-homes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Funeral Homes</Link>
+                <Link href="/vendors/crematoriums" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Crematoriums</Link>
+                <Link href="/vendors/florists" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Florists</Link>
+                <Link href="/vendors/grief-counselors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Grief Counselors</Link>
+                <Link href="/vendors/estate-lawyers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Estate Lawyers</Link>
+                <Link href="/vendors/memorial-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Memorial Products</Link>
+                <Link href="/vendors/event-venues" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Event Venues</Link>
               </div>
             </div>
 
@@ -174,11 +134,11 @@ export default function Header() {
           </div>
 
           <Link
-            href="/vendor-auth"
+            href="/sign-up?redirect_url=/vendor-auth&publicMetadata%5Brole%5D=vendor"
             className="text-xs text-gray-500 hover:text-[#1D3557] whitespace-nowrap mt-1"
             style={{ maxWidth: 234 }}
           >
-            Are you a vendor? Sign in here
+            Are you a vendor? Sign up here
           </Link>
         </div>
       </nav>

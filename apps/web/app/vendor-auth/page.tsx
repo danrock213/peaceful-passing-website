@@ -17,33 +17,30 @@ export default function VendorAuthPage() {
       return;
     }
 
-    const syncVendorRole = async () => {
+    const ensureVendorRole = async () => {
       const role = (user?.publicMetadata as any)?.role;
 
       if (role !== 'vendor') {
         try {
-          // @ts-ignore - public_metadata is valid at runtime
           await clerk.user?.updateUserMetadata({
             publicMetadata: {
               role: 'vendor',
             },
           });
-        } catch (error) {
-          console.error('Failed to update Clerk metadata:', error);
+          console.log('✅ Vendor role set in Clerk');
+        } catch (err) {
+          console.error('❌ Failed to set vendor role', err);
         }
       }
 
-      try {
-        const res = await fetch('/api/vendor-sync', { method: 'POST' });
-        const { hasVendorProfile } = await res.json();
+      // Now trigger sync to Supabase
+      const res = await fetch('/api/vendor-sync', { method: 'POST' });
+      const { hasVendorProfile } = await res.json();
 
-        router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
-      } catch (error) {
-        console.error('Failed to sync vendor profile:', error);
-      }
+      router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
     };
 
-    syncVendorRole();
+    ensureVendorRole();
   }, [isLoaded, isSignedIn, user, clerk, router]);
 
   return (
