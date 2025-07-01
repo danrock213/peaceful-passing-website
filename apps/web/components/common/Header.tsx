@@ -15,14 +15,6 @@ export default function Header() {
   const { user } = useUser();
   const router = useRouter();
 
-  const handleProtectedNav = (path: string) => {
-    if (user) {
-      router.push(path);
-    } else {
-      router.push('/sign-in');
-    }
-  };
-
   const handleLogoClick = () => {
     router.push(user ? '/dashboard' : '/');
   };
@@ -53,41 +45,32 @@ export default function Header() {
           </div>
 
           <div className="flex space-x-8 text-sm font-medium text-[#1D3557] items-center">
-            <Link
-              href="/checklist"
-              className="hover:text-[#F4A261] transition-colors"
-            >
-              Checklist
-            </Link>
+            <Link href="/checklist" className="hover:text-[#F4A261] transition-colors">Checklist</Link>
 
             <div className="relative group">
-              <button className="hover:text-[#F4A261] transition-colors">
-                Vendors ▾
-              </button>
+              <button className="hover:text-[#F4A261] transition-colors">Vendors ▾</button>
               <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <Link href="/vendors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">All Vendors</Link>
-                <Link href="/vendors/funeral-homes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Funeral Homes</Link>
-                <Link href="/vendors/crematoriums" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Crematoriums</Link>
-                <Link href="/vendors/florists" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Florists</Link>
-                <Link href="/vendors/grief-counselors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Grief Counselors</Link>
-                <Link href="/vendors/estate-lawyers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Estate Lawyers</Link>
-                <Link href="/vendors/memorial-products" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Memorial Products</Link>
-                <Link href="/vendors/event-venues" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Event Venues</Link>
+                {[
+                  { href: '/vendors', label: 'All Vendors' },
+                  { href: '/vendors/funeral-homes', label: 'Funeral Homes' },
+                  { href: '/vendors/crematoriums', label: 'Crematoriums' },
+                  { href: '/vendors/florists', label: 'Florists' },
+                  { href: '/vendors/grief-counselors', label: 'Grief Counselors' },
+                  { href: '/vendors/estate-lawyers', label: 'Estate Lawyers' },
+                  { href: '/vendors/memorial-products', label: 'Memorial Products' },
+                  { href: '/vendors/event-venues', label: 'Event Venues' },
+                ].map(({ href, label }) => (
+                  <Link key={href} href={href} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    {label}
+                  </Link>
+                ))}
               </div>
             </div>
 
-            <Link
-              href="/tribute"
-              className="hover:text-[#F4A261] transition-colors"
-            >
-              Tribute Page
-            </Link>
+            <Link href="/tribute" className="hover:text-[#F4A261] transition-colors">Tribute Page</Link>
 
             {userRole === 'admin' && (
-              <Link
-                href="/admin/dashboard"
-                className="hover:text-[#F4A261] transition-colors"
-              >
+              <Link href="/admin/dashboard" className="hover:text-[#F4A261] transition-colors">
                 Admin Dashboard
               </Link>
             )}
@@ -124,19 +107,16 @@ export default function Header() {
             <SignedIn>
               <div className="flex flex-col items-end">
                 <UserButton afterSignOutUrl="/" />
-                {userRole && (
-                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full mt-1 select-none">
-                    Role: {userRole}
-                  </span>
-                )}
+                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full mt-1 select-none">
+                  Role: {userRole}
+                </span>
               </div>
             </SignedIn>
           </div>
 
           <Link
-            href="/sign-up?redirect_url=/vendor-auth&publicMetadata%5Brole%5D=vendor"
+            href="/sign-up/vendor"
             className="text-xs text-gray-500 hover:text-[#1D3557] whitespace-nowrap mt-1"
-            style={{ maxWidth: 234 }}
           >
             Are you a vendor? Sign up here
           </Link>

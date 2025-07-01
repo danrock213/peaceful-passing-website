@@ -17,21 +17,18 @@ export default function VendorAuthPage() {
       return;
     }
 
-    const ensureVendorRole = async () => {
+    const ensureVendor = async () => {
       const role = (user?.publicMetadata as any)?.role;
 
       if (role !== 'vendor') {
         try {
-          // Use type assertion to bypass TS error
           await clerk.user?.update({
-            // @ts-expect-error: publicMetadata is allowed at runtime
-            publicMetadata: {
-              role: 'vendor',
-            },
+            // @ts-expect-error: publicMetadata allowed at runtime
+            publicMetadata: { role: 'vendor' },
           });
           console.log('✅ Vendor role set in Clerk');
         } catch (err) {
-          console.error('❌ Failed to set vendor role', err);
+          console.error('❌ Failed to set role:', err);
         }
       }
 
@@ -41,11 +38,11 @@ export default function VendorAuthPage() {
 
         router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
       } catch (err) {
-        console.error('❌ Vendor sync failed', err);
+        console.error('❌ Vendor sync failed:', err);
       }
     };
 
-    ensureVendorRole();
+    ensureVendor();
   }, [isLoaded, isSignedIn, user, clerk, router]);
 
   return (
