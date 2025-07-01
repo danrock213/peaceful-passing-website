@@ -24,11 +24,7 @@ export default function VendorAuthPage() {
         await clerk.user?.update({
           public_metadata: {
             role: 'vendor',
-    },
-  });
-}
-
-          },
+          }
         });
       }
 
