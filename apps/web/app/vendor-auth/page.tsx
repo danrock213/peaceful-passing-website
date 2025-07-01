@@ -1,50 +1,51 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { clerkClient } from '@clerk/nextjs/server'; // This import is used server-side only
 
 export default function VendorAuthPage() {
   const { user, isLoaded, isSignedIn } = useUser();
-  const { user: clerkUser } = useClerk();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn || !user) {
-      router.push('/sign-in');
-      return;
-    }
+    if (!isLoaded || !isSignedIn || !user) return;
 
-    const ensureVendorSetup = async () => {
-      const currentRole = (user.publicMetadata as any)?.role;
+    const ensureVendorRole = async () => {
+      const currentRole = (user.unsafeMetadata as any)?.role;
+
+      // ✅ If role is not 'vendor', patch it using frontend method
       if (currentRole !== 'vendor') {
         try {
-          // Update metadata directly
-          await clerkUser?.update({
-            // @ts-expect-error: not typed correctly but valid at runtime
-            publicMetadata: { role: 'vendor' },
+          await user.update({
+            unsafeMetadata: {
+              role: 'vendor',
+            },
           });
-          console.log('✅ Clerk metadata updated to vendor');
 
-          // Re-trigger sync after metadata is set
-          const res = await fetch('/api/vendor-sync', { method: 'POST' });
-          const { hasVendorProfile } = await res.json();
+          console.log('✅ Vendor role set via unsafeMetadata');
 
-          router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+          // Optional: Reload to re-trigger Clerk session update
+          window.location.reload();
+          return;
         } catch (err) {
-          console.error('❌ Failed to update metadata or sync profile', err);
+          console.error('❌ Failed to update Clerk metadata', err);
         }
-      } else {
-        // Role is already vendor — continue
+      }
+
+      // ✅ Sync with Supabase and redirect
+      try {
         const res = await fetch('/api/vendor-sync', { method: 'POST' });
         const { hasVendorProfile } = await res.json();
         router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+      } catch (err) {
+        console.error('❌ Vendor sync failed', err);
       }
     };
 
-    ensureVendorSetup();
-  }, [isLoaded, isSignedIn, user, clerkUser, router]);
+    ensureVendorRole();
+  }, [isLoaded, isSignedIn, user, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

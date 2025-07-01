@@ -1,47 +1,42 @@
 import { createClient } from '@/lib/supabase/server';
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { WebhookEvent } from '@clerk/nextjs/server';
 
-export async function POST() {
-  const { userId } = auth();
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function POST(req: Request) {
+  const payload = (await req.json()) as WebhookEvent;
+
+  console.log('🔔 Clerk Webhook Payload:', JSON.stringify(payload, null, 2));
+
+  if (payload.type !== 'user.created') {
+    return NextResponse.json({ message: 'Ignored non-user.created event' }, { status: 200 });
+  }
+
+  const clerkUserId = payload?.data?.id;
+  const email = payload?.data?.email_addresses?.[0]?.email_address ?? '';
+  const full_name =
+    `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
+
+  // ✅ Pull from unsafe_metadata now
+  const rawRole = payload?.data?.unsafe_metadata?.role;
+  const role = rawRole === 'vendor' ? 'vendor' : rawRole === 'admin' ? 'admin' : 'user';
+
+  if (!clerkUserId) {
+    return NextResponse.json({ error: 'Missing Clerk user ID' }, { status: 400 });
   }
 
   const supabase = createClient();
 
-  // Check if profile exists
-  const { data: profile, error: fetchError } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', userId)
-    .single();
+  const { error } = await supabase.from('profiles').insert({
+    clerk_id: clerkUserId,
+    email,
+    full_name,
+    role,
+  });
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    return NextResponse.json({ error: 'Profile fetch failed' }, { status: 500 });
+  if (error) {
+    console.error('❌ Supabase insert error:', error);
+    return NextResponse.json({ error: 'Failed to insert user', detail: error.message }, { status: 500 });
   }
 
-  if (!profile) {
-    const { error: insertError } = await supabase.from('profiles').insert({
-      id: userId,
-      role: 'vendor',
-    });
-
-    if (insertError) {
-      return NextResponse.json({ error: 'Insert failed' }, { status: 500 });
-    }
-  }
-
-  // Check for vendor record
-  const { data: vendor, error: vendorError } = await supabase
-    .from('vendors')
-    .select('id')
-    .eq('created_by', userId)
-    .maybeSingle();
-
-  if (vendorError) {
-    return NextResponse.json({ error: 'Vendor fetch failed' }, { status: 500 });
-  }
-
-  return NextResponse.json({ hasVendorProfile: !!vendor });
+  return NextResponse.json({ success: true });
 }

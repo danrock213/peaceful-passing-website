@@ -1,5 +1,3 @@
-// app/api/clerk-user-created/route.ts
-
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { WebhookEvent } from '@clerk/nextjs/server';
@@ -9,7 +7,6 @@ export async function POST(req: Request) {
 
   console.log('🔔 Clerk Webhook Payload:', JSON.stringify(payload, null, 2));
 
-  // Only handle new user events
   if (payload.type !== 'user.created') {
     return NextResponse.json({ message: 'Ignored non-user.created event' }, { status: 200 });
   }
@@ -19,8 +16,8 @@ export async function POST(req: Request) {
   const full_name =
     `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
 
-  // Normalize role from Clerk publicMetadata
-  const rawRole = payload?.data?.public_metadata?.role;
+  // ✅ Pull from unsafe_metadata now
+  const rawRole = payload?.data?.unsafe_metadata?.role;
   const role = rawRole === 'vendor' ? 'vendor' : rawRole === 'admin' ? 'admin' : 'user';
 
   if (!clerkUserId) {
