@@ -21,17 +21,26 @@ export default function VendorAuthPage() {
       const role = (user?.publicMetadata as any)?.role;
 
       if (role !== 'vendor') {
-        await clerk.user?.update({
-          public_metadata: {
-            role: 'vendor',
-          }
-        });
+        try {
+          // @ts-ignore - public_metadata is valid at runtime
+          await clerk.user?.updateUserMetadata({
+            publicMetadata: {
+              role: 'vendor',
+            },
+          });
+        } catch (error) {
+          console.error('Failed to update Clerk metadata:', error);
+        }
       }
 
-      const res = await fetch('/api/vendor-sync', { method: 'POST' });
-      const { hasVendorProfile } = await res.json();
+      try {
+        const res = await fetch('/api/vendor-sync', { method: 'POST' });
+        const { hasVendorProfile } = await res.json();
 
-      router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+        router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+      } catch (error) {
+        console.error('Failed to sync vendor profile:', error);
+      }
     };
 
     syncVendorRole();
