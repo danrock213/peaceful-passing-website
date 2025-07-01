@@ -1,4 +1,5 @@
 // app/api/clerk-user-created/route.ts
+
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { WebhookEvent } from '@clerk/nextjs/server';
@@ -8,16 +9,19 @@ export async function POST(req: Request) {
 
   console.log('🔔 Clerk Webhook Payload:', JSON.stringify(payload, null, 2));
 
+  // Only handle new user events
   if (payload.type !== 'user.created') {
     return NextResponse.json({ message: 'Ignored non-user.created event' }, { status: 200 });
   }
 
   const clerkUserId = payload?.data?.id;
   const email = payload?.data?.email_addresses?.[0]?.email_address ?? '';
-  const full_name = `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
+  const full_name =
+    `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
 
-  // 👇 This is the key: should match how you set publicMetadata during sign-up
-  const role = payload?.data?.public_metadata?.role ?? 'user';
+  // Normalize role from Clerk publicMetadata
+  const rawRole = payload?.data?.public_metadata?.role;
+  const role = rawRole === 'vendor' ? 'vendor' : rawRole === 'admin' ? 'admin' : 'user';
 
   if (!clerkUserId) {
     return NextResponse.json({ error: 'Missing Clerk user ID' }, { status: 400 });
