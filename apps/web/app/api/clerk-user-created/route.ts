@@ -14,15 +14,19 @@ export async function POST(req: Request) {
 
   const clerkUserId = payload?.data?.id;
   const role = payload?.data?.public_metadata?.role ?? 'user';
+  const email = payload?.data?.email_addresses?.[0]?.email_address ?? '';
+  const full_name = `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
 
   if (!clerkUserId) {
-    return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing Clerk user ID' }, { status: 400 });
   }
 
   const supabase = createClient();
   const { error } = await supabase.from('profiles').insert({
-    id: clerkUserId,
     role,
+    full_name,
+    email,
+    clerk_id: clerkUserId,
   });
 
   if (error) {
