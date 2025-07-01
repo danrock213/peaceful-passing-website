@@ -10,7 +10,6 @@ export async function POST() {
 
   const supabase = createClient();
 
-  // Ensure vendor role
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -18,13 +17,9 @@ export async function POST() {
     .single();
 
   if (!profile || profile.role !== 'vendor') {
-    await supabase
-      .from('profiles')
-      .update({ role: 'vendor' })
-      .eq('id', userId);
+    await supabase.from('profiles').update({ role: 'vendor' }).eq('id', userId);
   }
 
-  // Check for existing vendor profile
   const { data: vendor } = await supabase
     .from('vendors')
     .select('id')

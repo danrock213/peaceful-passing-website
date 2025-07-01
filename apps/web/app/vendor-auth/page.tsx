@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useEffect } from 'react';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 
 export default function VendorAuthPage() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { clerk } = useClerk();
   const router = useRouter();
-  const [status, setStatus] = useState<'idle' | 'checking' | 'redirecting' | 'error'>('idle');
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -17,30 +17,31 @@ export default function VendorAuthPage() {
       return;
     }
 
-    const syncAndRedirect = async () => {
-      setStatus('checking');
-      try {
-        const res = await fetch('/api/vendor-sync', { method: 'POST' });
-        const { hasVendorProfile } = await res.json();
-        setStatus('redirecting');
-        router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
-      } catch (err) {
-        console.error('Vendor sync failed', err);
-        setStatus('error');
+    const syncVendorRole = async () => {
+      // 1. Add Clerk metadata (if not already set)
+      const role = (user?.publicMetadata as any)?.role;
+
+      if (role !== 'vendor') {
+        await clerk.user?.update({
+          publicMetadata: {
+            role: 'vendor',
+          },
+        });
       }
+
+      // 2. Sync with Supabase
+      const res = await fetch('/api/vendor-sync', { method: 'POST' });
+      const { hasVendorProfile } = await res.json();
+
+      router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
     };
 
-    syncAndRedirect();
-  }, [isLoaded, isSignedIn, router]);
+    syncVendorRole();
+  }, [isLoaded, isSignedIn, user, clerk, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <p className="text-sm text-gray-600">
-        {status === 'idle' && 'Initializing...'}
-        {status === 'checking' && 'Checking your vendor status...'}
-        {status === 'redirecting' && 'Redirecting you now...'}
-        {status === 'error' && 'Something went wrong. Please try again later.'}
-      </p>
+      <p className="text-sm text-gray-600">Setting up your vendor account…</p>
     </div>
   );
 }
