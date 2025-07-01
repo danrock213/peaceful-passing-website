@@ -22,7 +22,7 @@ export default function VendorAuthPage() {
 
       if (role !== 'vendor') {
         try {
-          await clerk.user?.updateUserMetadata({
+          await clerk.user?.update({
             publicMetadata: {
               role: 'vendor',
             },
@@ -34,10 +34,14 @@ export default function VendorAuthPage() {
       }
 
       // Now trigger sync to Supabase
-      const res = await fetch('/api/vendor-sync', { method: 'POST' });
-      const { hasVendorProfile } = await res.json();
+      try {
+        const res = await fetch('/api/vendor-sync', { method: 'POST' });
+        const { hasVendorProfile } = await res.json();
 
-      router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+        router.push(hasVendorProfile ? '/vendor/bookings' : '/vendors/create');
+      } catch (err) {
+        console.error('❌ Vendor sync failed', err);
+      }
     };
 
     ensureVendorRole();
