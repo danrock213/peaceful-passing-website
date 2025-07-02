@@ -1,7 +1,7 @@
-// app/api/vendor-sync/route.ts
 import { createClient } from '@/lib/supabase/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { clerkClient } from '@clerk/nextjs';
 
 export async function POST() {
   const { userId } = auth();
@@ -10,46 +10,51 @@ export async function POST() {
   }
 
   const supabase = createClient();
-  const clerkUser = await currentUser();
+
+  // ✅ Pull fresh metadata from Clerk backend API
+  let clerkUser;
+  try {
+    clerkUser = await clerkClient.users.getUser(userId);
+  } catch (err) {
+    console.error('❌ Failed to fetch Clerk user from backend API:', err);
+    return NextResponse.json({ error: 'Failed to get Clerk user' }, { status: 500 });
+  }
+
   const clerkRole = (clerkUser?.unsafeMetadata?.role ?? 'user') as string;
 
-  // 1. Check if profile exists in Supabase
+  // 🔍 Check existing profile
   const { data: existingProfile, error: fetchError } = await supabase
     .from('profiles')
     .select('id, role')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
-  if (fetchError && fetchError.code !== 'PGRST116') {
-    console.error('Fetch error:', fetchError);
-    return NextResponse.json({ error: 'Profile fetch failed' }, { status: 500 });
+  if (fetchError) {
+    console.error('❌ Supabase fetch error:', fetchError);
+    return NextResponse.json({ error: 'Fetch failed' }, { status: 500 });
   }
 
   if (!existingProfile) {
-    // 2. Insert if not exists
     const { error: insertError } = await supabase.from('profiles').insert({
       id: userId,
       role: clerkRole,
     });
-
     if (insertError) {
-      console.error('Insert error:', insertError);
+      console.error('❌ Insert error:', insertError);
       return NextResponse.json({ error: 'Insert failed' }, { status: 500 });
     }
   } else if (existingProfile.role !== clerkRole) {
-    // 3. Update role if it's out of sync
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ role: clerkRole })
       .eq('id', userId);
-
     if (updateError) {
-      console.error('Update error:', updateError);
-      return NextResponse.json({ error: 'Role update failed' }, { status: 500 });
+      console.error('❌ Update error:', updateError);
+      return NextResponse.json({ error: 'Update failed' }, { status: 500 });
     }
   }
 
-  // 4. Check for vendor entry
+  // Vendor profile check
   const { data: vendor, error: vendorError } = await supabase
     .from('vendors')
     .select('id')
@@ -57,7 +62,7 @@ export async function POST() {
     .maybeSingle();
 
   if (vendorError) {
-    console.error('Vendor fetch error:', vendorError);
+    console.error('❌ Vendor fetch error:', vendorError);
     return NextResponse.json({ error: 'Vendor fetch failed' }, { status: 500 });
   }
 
