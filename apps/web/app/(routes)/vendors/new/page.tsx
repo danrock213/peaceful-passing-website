@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import VendorLocationForm from '@/components/VendorLocationForm';
+import { v4 as uuidv4 } from 'uuid';
 
 const categoryLabels: Record<string, string> = {
   'funeral-homes': 'Funeral Homes',
@@ -35,16 +36,16 @@ export default function AddVendorPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
-  // ⛔ Redirect if not signed in or not a vendor
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
-        router.push('/sign-in');
-      } else if (user.unsafeMetadata?.role !== 'vendor') {
-        alert('Only vendors can add vendor profiles.');
-        router.push('/');
-      }
+    if (!isLoaded) return;
+    if (!user) {
+      router.push('/sign-in');
+    } else if (user.unsafeMetadata?.role !== 'vendor') {
+      router.push('/dashboard');
+    } else {
+      setShowForm(true);
     }
   }, [user, isLoaded, router]);
 
@@ -66,14 +67,8 @@ export default function AddVendorPage() {
   };
 
   const validateForm = () => {
-    if (!form.name.trim()) {
-      setError('Name is required.');
-      return false;
-    }
-    if (!form.location.trim()) {
-      setError('Location is required.');
-      return false;
-    }
+    if (!form.name.trim()) return setError('Name is required.');
+    if (!form.location.trim()) return setError('Location is required.');
     return true;
   };
 
@@ -89,26 +84,26 @@ export default function AddVendorPage() {
     setSaving(true);
 
     const { error: supabaseError } = await supabase.from('vendors').insert({
+      id: uuidv4(),
       ...form,
-      created_by: user.id, // ✅ user.id is Clerk ID as text
+      created_by: user.id,
       approved: false,
     });
 
     setSaving(false);
 
     if (supabaseError) {
-      setError(supabaseError.message);
+      setError(`Failed to save: ${supabaseError.message}`);
       return;
     }
 
-    alert('Vendor submitted! Awaiting admin approval.');
-    router.push('/vendors/pending');
+    router.push('/vendor/dashboard');
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || !showForm) {
     return (
       <main className="max-w-xl mx-auto p-6 text-center">
-        <p>Loading user data...</p>
+        <p className="text-gray-600">Checking permissions...</p>
       </main>
     );
   }
@@ -124,10 +119,9 @@ export default function AddVendorPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Name, Phone, Website */}
         {['name', 'phone', 'website'].map((field) => (
           <div key={field}>
-            <label htmlFor={field} className="block text-sm font-medium">
+            <label htmlFor={field} className="block text-sm font-medium mb-1">
               {field[0].toUpperCase() + field.slice(1)}
             </label>
             <input
@@ -142,9 +136,8 @@ export default function AddVendorPage() {
           </div>
         ))}
 
-        {/* Category */}
         <div>
-          <label htmlFor="category" className="block text-sm font-medium">
+          <label htmlFor="category" className="block text-sm font-medium mb-1">
             Category
           </label>
           <select
@@ -162,9 +155,8 @@ export default function AddVendorPage() {
           </select>
         </div>
 
-        {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium">
+          <label htmlFor="description" className="block text-sm font-medium mb-1">
             Description
           </label>
           <textarea
@@ -177,13 +169,11 @@ export default function AddVendorPage() {
           />
         </div>
 
-        {/* Location */}
         <VendorLocationForm
           initialLocation={form.location}
           onSave={handleLocationSave}
         />
 
-        {/* Approved (disabled for vendors) */}
         <div>
           <label className="inline-flex items-center space-x-2">
             <input
@@ -194,11 +184,10 @@ export default function AddVendorPage() {
               className="form-checkbox"
               disabled
             />
-            <span className="text-sm opacity-50">Approved (admin only)</span>
+            <span className="text-sm text-gray-500">Approved (admin only)</span>
           </label>
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={saving}

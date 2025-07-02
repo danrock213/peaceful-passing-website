@@ -1,35 +1,60 @@
-import { currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server'; 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import VendorDashboardShell, { VendorListing } from './VendorDashboardShell';
+import VendorDashboardShell from './VendorDashboardShell';
 
 export default async function VendorDashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/sign-in');
 
   const supabase = createClient();
-  const { data: profile, error } = await supabase
+
+  // fetch vendor profile by Clerk ID
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('role')
     .eq('clerk_id', user.id)
     .single();
 
-  if (error || profile?.role !== 'vendor') {
-    redirect('/dashboard'); // fallback to user dashboard if not a vendor
+  if (profileError || profile?.role !== 'vendor') {
+    redirect('/dashboard');
   }
 
-  // 🔧 Replace with real Supabase queries later
-  const listings: VendorListing[] = [
-    { id: 'l1', title: 'Elegant Catering', category: 'Catering', location: 'NYC', active: true },
-    { id: 'l2', title: 'Comfort Transport', category: 'Transportation', location: 'NYC', active: false },
-  ];
-  const stats = { views: 150, leads: 12, approved: true };
+  // fetch vendor listings
+  const { data: listings, error: vendorError } = await supabase
+    .from('vendors')
+    .select('id, name, category, location, approved')
+    .eq('created_by', user.id);
+
+  if (vendorError) {
+    console.error(vendorError.message);
+    return <div className="p-6 text-red-600">Error loading vendor data.</div>;
+  }
+
+  // Redirect if vendor has no listings yet
+  if (!listings || listings.length === 0) {
+    redirect('/vendor/new');
+  }
+
+  const displayName = user.firstName || user.emailAddresses?.[0]?.emailAddress || 'Vendor';
 
   return (
     <VendorDashboardShell
-      businessName={user.firstName || user.emailAddresses[0].emailAddress}
-      listings={listings}
-      stats={stats}
+      businessName={displayName}
+      listings={
+        listings.map((v) => ({
+          id: v.id,
+          title: v.name,
+          category: v.category,
+          location: v.location,
+          active: v.approved,
+        }))
+      }
+      stats={{
+        views: listings.length * 10,
+        leads: listings.length * 2,
+        approved: listings.every((v) => v.approved),
+      }}
     />
   );
 }
