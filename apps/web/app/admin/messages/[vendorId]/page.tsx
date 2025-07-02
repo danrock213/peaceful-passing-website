@@ -12,7 +12,7 @@ export default function AdminVendorMessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
+  const isAdmin = isLoaded && user?.unsafeMetadata?.role === 'admin';
 
   useEffect(() => {
     if (!isAdmin) return;

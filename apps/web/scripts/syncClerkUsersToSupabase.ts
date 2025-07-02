@@ -45,7 +45,7 @@ async function upsertProfiles(users: User[]) {
 
     const profile = {
       clerk_id: user.id, // ✅ Use string Clerk ID
-      role: user.publicMetadata?.role || 'user',
+      role: user.unsafeMetadata?.role || 'user',
       full_name: fullName,
       email,
       created_at: createdAt,

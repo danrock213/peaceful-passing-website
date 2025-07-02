@@ -31,7 +31,7 @@ export default function AdminUserManagementPage() {
     if (isLoaded) {
       if (!user) {
         router.push('/sign-in');
-      } else if (user.publicMetadata?.role !== 'admin') {
+      } else if (user.unsafeMetadata?.role !== 'admin') {
         router.push('/');
       }
     }
@@ -57,7 +57,7 @@ export default function AdminUserManagementPage() {
       setLoading(false);
     }
 
-    if (isLoaded && user?.publicMetadata?.role === 'admin') {
+    if (isLoaded && user?.unsafeMetadata?.role === 'admin') {
       fetchProfiles();
     }
   }, [isLoaded, user, supabase]);

@@ -41,7 +41,7 @@ export default function AddVendorPage() {
     if (isLoaded) {
       if (!user) {
         router.push('/sign-in');
-      } else if (user.publicMetadata?.role !== 'vendor') {
+      } else if (user.unsafeMetadata?.role !== 'vendor') {
         alert('Only vendors can add new vendor profiles.');
         router.push('/');
       }

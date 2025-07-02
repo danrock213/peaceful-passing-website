@@ -27,7 +27,7 @@ export default function AdminTributesPage() {
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
+  const isAdmin = isLoaded && user?.unsafeMetadata?.role === 'admin';
 
   // Protect the page
   useEffect(() => {

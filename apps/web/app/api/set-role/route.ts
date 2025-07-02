@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
   try {
     await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: { role },
+      unsafeMetadata: { role },
     });
 
     return NextResponse.json({ message: `Role updated to ${role}` });

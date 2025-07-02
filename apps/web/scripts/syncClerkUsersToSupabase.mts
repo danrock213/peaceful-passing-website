@@ -19,7 +19,7 @@ const supabase = createClient(
 
 interface ClerkUser {
   id: string;
-  publicMetadata?: { role?: string };
+  unsafeMetadata?: { role?: string };
   firstName?: string | null;
   lastName?: string | null;
   fullName?: string | null;
@@ -35,7 +35,7 @@ async function upsertProfiles(users: ClerkUser[]) {
   for (const user of users) {
     const profile = {
       id: user.id,
-      role: user.publicMetadata?.role || 'user',
+      role: user.unsafeMetadata?.role || 'user',
       full_name:
         [user.firstName, user.lastName].filter(Boolean).join(' ') ||
         user.fullName ||

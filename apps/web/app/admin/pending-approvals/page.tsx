@@ -23,7 +23,7 @@ export default function PendingApprovalsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = user?.publicMetadata?.role === 'admin';
+  const isAdmin = user?.unsafeMetadata?.role === 'admin';
 
   useEffect(() => {
     if (!isLoaded) return;

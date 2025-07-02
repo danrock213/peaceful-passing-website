@@ -24,7 +24,7 @@ export default function AdminActivityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
+  const isAdmin = isLoaded && user?.unsafeMetadata?.role === 'admin';
 
   // Access control
   useEffect(() => {

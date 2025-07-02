@@ -27,7 +27,7 @@ export default function RoleSwitcherPage() {
 
       <p className="mb-2">
         Current Role:{' '}
-        <strong>{(user?.publicMetadata?.role as string) || 'Not set'}</strong>
+        <strong>{(user?.unsafeMetadata?.role as string) || 'Not set'}</strong>
       </p>
 
       <input

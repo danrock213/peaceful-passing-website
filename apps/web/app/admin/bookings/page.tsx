@@ -20,7 +20,7 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const isAdmin = isLoaded && user?.publicMetadata?.role === 'admin';
+  const isAdmin = isLoaded && user?.unsafeMetadata?.role === 'admin';
 
   useEffect(() => {
     if (!isAdmin) return;

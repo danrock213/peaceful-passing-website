@@ -65,7 +65,7 @@ export default function VendorEditPage() {
     if (isLoaded) {
       if (!user) {
         router.push('/sign-in');
-      } else if (user.publicMetadata?.role !== 'vendor') {
+      } else if (user.unsafeMetadata?.role !== 'vendor') {
         alert('Only vendors can edit vendor profiles.');
         router.push('/');
       }

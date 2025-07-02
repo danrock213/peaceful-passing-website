@@ -5,8 +5,6 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 export async function POST(req: Request) {
   const payload = (await req.json()) as WebhookEvent;
 
-  console.log('🔔 Clerk Webhook Payload:', JSON.stringify(payload, null, 2));
-
   if (payload.type !== 'user.created') {
     return NextResponse.json({ message: 'Ignored non-user.created event' }, { status: 200 });
   }
@@ -16,7 +14,6 @@ export async function POST(req: Request) {
   const full_name =
     `${payload?.data?.first_name ?? ''} ${payload?.data?.last_name ?? ''}`.trim() || 'Unknown';
 
-  // ✅ Pull from unsafe_metadata now
   const rawRole = payload?.data?.unsafe_metadata?.role;
   const role = rawRole === 'vendor' ? 'vendor' : rawRole === 'admin' ? 'admin' : 'user';
 

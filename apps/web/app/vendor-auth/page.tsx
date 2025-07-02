@@ -1,40 +1,37 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { clerkClient } from '@clerk/nextjs/server'; // This import is used server-side only
 
 export default function VendorAuthPage() {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { user: clerkUser } = useClerk();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user) return;
+    if (!isLoaded || !isSignedIn || !user || !clerkUser) return;
 
     const ensureVendorRole = async () => {
       const currentRole = (user.unsafeMetadata as any)?.role;
 
-      // ✅ If role is not 'vendor', patch it using frontend method
       if (currentRole !== 'vendor') {
         try {
-          await user.update({
+          await clerkUser.update({
             unsafeMetadata: {
               role: 'vendor',
             },
           });
-
           console.log('✅ Vendor role set via unsafeMetadata');
-
-          // Optional: Reload to re-trigger Clerk session update
-          window.location.reload();
+          window.location.reload(); // Triggers Clerk refetch
           return;
         } catch (err) {
-          console.error('❌ Failed to update Clerk metadata', err);
+          console.error('❌ Failed to update Clerk unsafeMetadata', err);
+          return;
         }
       }
 
-      // ✅ Sync with Supabase and redirect
+      // 🔁 Sync to Supabase
       try {
         const res = await fetch('/api/vendor-sync', { method: 'POST' });
         const { hasVendorProfile } = await res.json();
@@ -45,7 +42,7 @@ export default function VendorAuthPage() {
     };
 
     ensureVendorRole();
-  }, [isLoaded, isSignedIn, user, router]);
+  }, [isLoaded, isSignedIn, user, clerkUser, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

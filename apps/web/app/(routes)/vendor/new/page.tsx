@@ -16,7 +16,7 @@ export default function VendorSignUpPage() {
     const updateRole = async () => {
       try {
         await user.update({
-          publicMetadata: {
+          unsafeMetadata: {
             role: 'vendor',
           },
         } as any); // ✅ Type assertion allows metadata typing

@@ -5,56 +5,63 @@ import { clerkClient } from '@clerk/nextjs';
 
 export async function POST() {
   const { userId } = auth();
+
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const supabase = createClient();
 
-  // ✅ Pull fresh metadata from Clerk backend API
+  // ✅ Pull fresh Clerk user info
   let clerkUser;
   try {
     clerkUser = await clerkClient.users.getUser(userId);
   } catch (err) {
-    console.error('❌ Failed to fetch Clerk user from backend API:', err);
-    return NextResponse.json({ error: 'Failed to get Clerk user' }, { status: 500 });
+    console.error('❌ Failed to fetch Clerk user:', err);
+    return NextResponse.json({ error: 'Clerk fetch failed' }, { status: 500 });
   }
 
-  const clerkRole = (clerkUser?.unsafeMetadata?.role ?? 'user') as string;
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress ?? '';
+  const full_name = `${clerkUser?.firstName ?? ''} ${clerkUser?.lastName ?? ''}`.trim() || 'Unknown';
+  const role = (clerkUser?.unsafeMetadata?.role ?? 'user') as string;
 
-  // 🔍 Check existing profile
+  // 🔍 Check if profile exists
   const { data: existingProfile, error: fetchError } = await supabase
     .from('profiles')
-    .select('id, role')
-    .eq('id', userId)
+    .select('*')
+    .eq('clerk_id', userId)
     .maybeSingle();
 
   if (fetchError) {
-    console.error('❌ Supabase fetch error:', fetchError);
-    return NextResponse.json({ error: 'Fetch failed' }, { status: 500 });
+    console.error('❌ Supabase profile fetch error:', fetchError);
+    return NextResponse.json({ error: 'Profile fetch failed' }, { status: 500 });
   }
 
   if (!existingProfile) {
     const { error: insertError } = await supabase.from('profiles').insert({
-      id: userId,
-      role: clerkRole,
+      clerk_id: userId,
+      email,
+      full_name,
+      role,
     });
+
     if (insertError) {
       console.error('❌ Insert error:', insertError);
       return NextResponse.json({ error: 'Insert failed' }, { status: 500 });
     }
-  } else if (existingProfile.role !== clerkRole) {
+  } else if (existingProfile.role !== role) {
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ role: clerkRole })
-      .eq('id', userId);
+      .update({ role })
+      .eq('clerk_id', userId);
+
     if (updateError) {
       console.error('❌ Update error:', updateError);
       return NextResponse.json({ error: 'Update failed' }, { status: 500 });
     }
   }
 
-  // Vendor profile check
+  // ✅ Vendor profile check
   const { data: vendor, error: vendorError } = await supabase
     .from('vendors')
     .select('id')
@@ -63,7 +70,7 @@ export async function POST() {
 
   if (vendorError) {
     console.error('❌ Vendor fetch error:', vendorError);
-    return NextResponse.json({ error: 'Vendor fetch failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Vendor check failed' }, { status: 500 });
   }
 
   return NextResponse.json({ hasVendorProfile: !!vendor });

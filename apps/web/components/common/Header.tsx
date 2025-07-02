@@ -20,8 +20,7 @@ export default function Header() {
   };
 
   // ✅ Pull role from Clerk's unsafeMetadata
-  const userRole =
-    (user?.unsafeMetadata as { role?: string })?.role ?? 'Not set';
+  const userRole = user?.unsafeMetadata?.role as string ?? 'Not set';
 
   return (
     <header className="bg-white shadow sticky top-0 z-50">

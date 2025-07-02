@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine approval status based on user role
-    const isAdmin = user.publicMetadata?.role === 'admin';
+    const isAdmin = user.unsafeMetadata?.role === 'admin';
 
     const newVendor = {
       ...parseResult.data,
