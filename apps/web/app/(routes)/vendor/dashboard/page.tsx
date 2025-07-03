@@ -1,58 +1,60 @@
-'use client';
+import { currentUser } from '@clerk/nextjs/server'; 
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import VendorDashboardShell from './VendorDashboardShell';
 
-import { useRouter } from 'next/navigation';
-import { SignUp, useUser } from '@clerk/nextjs';
-import { useEffect, useRef } from 'react';
-import { createBrowserClient } from '@/lib/supabase/browser';
+export default async function VendorDashboardPage() {
+  const user = await currentUser();
+  if (!user) redirect('/sign-in');
 
-export default function VendorSignUpPage() {
-  const router = useRouter();
-  const { user, isSignedIn, isLoaded } = useUser();
-  const hasInitialized = useRef(false);
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user || hasInitialized.current) return;
+  // fetch vendor profile by Clerk ID
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('clerk_id', user.id)
+    .single();
 
-    const setupVendor = async () => {
-      try {
-        hasInitialized.current = true;
+  if (profileError || profile?.role !== 'vendor') {
+    redirect('/dashboard');
+  }
 
-        // Step 1: Update role in Clerk
-        await user.update({
-          unsafeMetadata: {
-            role: 'vendor',
-          },
-        } as any);
+  // fetch vendor listings
+  const { data: listings, error: vendorError } = await supabase
+    .from('vendors')
+    .select('id, name, category, location, approved')
+    .eq('created_by', user.id);
 
-        // Step 2: Create placeholder vendor listing if one doesn’t exist
-        const { data: existing } = await supabase
-          .from('vendors')
-          .select('id')
-          .eq('created_by', user.id)
-          .maybeSingle();
+  if (vendorError) {
+    console.error(vendorError.message);
+    return <div className="p-6 text-red-600">Error loading vendor data.</div>;
+  }
 
-        if (!existing) {
-          await supabase.from('vendors').insert([
-            {
-              created_by: user.id,
-              name: 'New Vendor',
-              category: 'Other',
-              location: 'TBD',
-              approved: false,
-            },
-          ]);
-        }
+  // Redirect if vendor has no listings yet
+  if (!listings || listings.length === 0) {
+    redirect('/vendor/new');
+  }
 
-        // Step 3: Redirect to dashboard
-        router.replace('/vendor/dashboard');
-      } catch (err) {
-        console.error('Vendor onboarding failed:', err);
+  const displayName = user.firstName || user.emailAddresses?.[0]?.emailAddress || 'Vendor';
+
+  return (
+    <VendorDashboardShell
+      businessName={displayName}
+      listings={
+        listings.map((v) => ({
+          id: v.id,
+          title: v.name,
+          category: v.category,
+          location: v.location,
+          active: v.approved,
+        }))
       }
-    };
-
-    setupVendor();
-  }, [isLoaded, isSignedIn, user, router, supabase]);
-
-  return <SignUp path="/vendor/new" routing="path" />;
+      stats={{
+        views: listings.length * 10,
+        leads: listings.length * 2,
+        approved: listings.every((v) => v.approved),
+      }}
+    />
+  );
 }
