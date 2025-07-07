@@ -31,7 +31,7 @@ export default function VendorNewPage() {
         } as any);
         hasSetRole.current = true;
       } catch (err) {
-        console.error('Failed to update role:', err);
+        console.error('❌ Failed to update role:', err);
       }
     };
 
@@ -66,19 +66,18 @@ export default function VendorNewPage() {
         .single();
 
       if (error) {
-        console.error('Insert error:', error);
-        alert('There was a problem creating your vendor listing.');
+        console.error('❌ Supabase insert error:', error); // <- shows full error in browser console
+        alert(`There was a problem creating your vendor listing.\n\n${error.message}`); // <- shows message in popup
         return;
       }
 
-      console.log('Created vendor:', data);
+      console.log('✅ Created vendor:', data);
 
-      // Small delay to let Supabase catch up before redirect
       setTimeout(() => {
         router.push('/vendor/dashboard');
       }, 800);
     } catch (err) {
-      console.error('Error creating vendor:', err);
+      console.error('❌ Unexpected error during insert:', err);
       alert('Unexpected error. Please try again.');
     } finally {
       setSubmitting(false);
