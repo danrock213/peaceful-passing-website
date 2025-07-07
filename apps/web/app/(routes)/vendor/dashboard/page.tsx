@@ -31,25 +31,34 @@ export default async function VendorDashboardPage() {
     return <div className="p-6 text-red-600">Error loading vendor data.</div>;
   }
 
-  // Redirect if vendor has no listings yet
-  if (!listings || listings.length === 0) {
-    redirect('/vendor/new');
-  }
-
   const displayName = user.firstName || user.emailAddresses?.[0]?.emailAddress || 'Vendor';
+
+  // Handle empty listing state
+  if (!listings || listings.length === 0) {
+    return (
+      <div className="p-6 max-w-xl mx-auto">
+        <h2 className="text-xl font-semibold mb-2">Welcome to your Vendor Dashboard</h2>
+        <p className="mb-4">You haven’t created a vendor listing yet.</p>
+        <a
+          href="/vendor/new"
+          className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Create Listing
+        </a>
+      </div>
+    );
+  }
 
   return (
     <VendorDashboardShell
       businessName={displayName}
-      listings={
-        listings.map((v) => ({
-          id: v.id,
-          title: v.name,
-          category: v.category,
-          location: v.location,
-          active: v.approved,
-        }))
-      }
+      listings={listings.map((v) => ({
+        id: v.id,
+        title: v.name,
+        category: v.category,
+        location: v.location,
+        active: v.approved,
+      }))}
       stats={{
         views: listings.length * 10,
         leads: listings.length * 2,

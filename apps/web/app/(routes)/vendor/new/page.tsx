@@ -51,19 +51,35 @@ export default function VendorNewPage() {
 
     setSubmitting(true);
     try {
-      await supabase.from('vendors').insert([
-        {
-          created_by: user.id,
-          name: form.name,
-          category: form.category,
-          location: form.location,
-          approved: false,
-        },
-      ]);
+      const { data, error } = await supabase
+        .from('vendors')
+        .insert([
+          {
+            created_by: user.id,
+            name: form.name,
+            category: form.category,
+            location: form.location,
+            approved: false,
+          },
+        ])
+        .select()
+        .single();
 
-      router.push('/vendor/dashboard');
+      if (error) {
+        console.error('Insert error:', error);
+        alert('There was a problem creating your vendor listing.');
+        return;
+      }
+
+      console.log('Created vendor:', data);
+
+      // Small delay to let Supabase catch up before redirect
+      setTimeout(() => {
+        router.push('/vendor/dashboard');
+      }, 800);
     } catch (err) {
       console.error('Error creating vendor:', err);
+      alert('Unexpected error. Please try again.');
     } finally {
       setSubmitting(false);
     }
