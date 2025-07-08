@@ -10,12 +10,7 @@ export default function VendorNewPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const supabase = createBrowserClient();
 
-  const [form, setForm] = useState({
-    name: '',
-    category: '',
-    location: '',
-  });
-
+  const [form, setForm] = useState({ name: '', category: '', location: '' });
   const [submitting, setSubmitting] = useState(false);
   const hasSetRole = useRef(false);
 
@@ -24,11 +19,7 @@ export default function VendorNewPage() {
 
     const updateRole = async () => {
       try {
-        await user.update({
-          unsafeMetadata: {
-            role: 'vendor',
-          },
-        } as any);
+        await user.update({ unsafeMetadata: { role: 'vendor' } } as any);
         hasSetRole.current = true;
       } catch (err) {
         console.error('❌ Failed to update role:', err);
@@ -55,7 +46,7 @@ export default function VendorNewPage() {
         .from('vendors')
         .insert([
           {
-            created_by: user.id,
+            created_by: user.id, // This should match the `auth.jwt().sub` RLS
             name: form.name,
             category: form.category,
             location: form.location,
@@ -66,16 +57,13 @@ export default function VendorNewPage() {
         .single();
 
       if (error) {
-        console.error('❌ Supabase insert error:', error); // <- shows full error in browser console
-        alert(`There was a problem creating your vendor listing.\n\n${error.message}`); // <- shows message in popup
+        console.error('❌ Supabase insert error:', error);
+        alert(`There was a problem creating your vendor listing.\n\n${error.message}`);
         return;
       }
 
       console.log('✅ Created vendor:', data);
-
-      setTimeout(() => {
-        router.push('/vendor/dashboard');
-      }, 800);
+      router.push('/vendor/dashboard');
     } catch (err) {
       console.error('❌ Unexpected error during insert:', err);
       alert('Unexpected error. Please try again.');

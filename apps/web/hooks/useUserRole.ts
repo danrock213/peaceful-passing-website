@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { createBrowserClient } from '@/lib/supabase/browser';
 
@@ -8,9 +10,7 @@ export default function useUserRole() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn || !user?.id) {
+    if (!isLoaded || !isSignedIn || !user?.id) {
       setRole(null);
       setLoading(false);
       return;

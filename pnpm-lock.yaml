@@ -109,6 +109,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: 1.0.2
         version: 1.0.2(@types/react@18.2.46)(react@18.2.0)
+      '@supabase/auth-helpers-nextjs':
+        specifier: ^0.10.0
+        version: 0.10.0(@supabase/supabase-js@2.50.1(ws@8.18.2))
       '@supabase/supabase-js':
         specifier: ^2.50.1
         version: 2.50.1(ws@8.18.2)

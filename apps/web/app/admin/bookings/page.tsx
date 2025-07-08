@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useUser } from '@clerk/nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 type BookingRequest = {
   id: string;
@@ -14,8 +14,9 @@ type BookingRequest = {
 };
 
 export default function AdminBookingsPage() {
-  const supabase = createClientComponentClient();
   const { user, isLoaded } = useUser();
+  const supabase = createClientComponentClient();
+
   const [requests, setRequests] = useState<BookingRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -32,8 +33,12 @@ export default function AdminBookingsPage() {
         .select('*')
         .order('date', { ascending: false });
 
-      setRequests(data ?? []);
-      if (error) console.error('Failed to fetch booking requests:', error.message);
+      if (error) {
+        console.error('Failed to fetch booking requests:', error.message);
+        setRequests([]);
+      } else {
+        setRequests(data ?? []);
+      }
 
       setLoading(false);
     };
@@ -43,10 +48,13 @@ export default function AdminBookingsPage() {
 
   const logAdminAction = async (action: string, details: string) => {
     if (!user) return;
-    await supabase.from('admin_activity_logs').insert({
+
+    await supabase.from('admin_logs').insert({
       admin_id: user.id,
-      action,
-      details,
+      action_type: action,
+      target_type: 'booking',
+      target_id: 'N/A',
+      details: { note: details },
     });
   };
 
@@ -59,26 +67,33 @@ export default function AdminBookingsPage() {
       .eq('id', id);
 
     if (error) {
-      alert('Failed to update status');
-      console.error(error);
-    } else {
-      const request = requests.find((r) => r.id === id);
-      await logAdminAction(
-        `booking.${newStatus}`,
-        `Booking request for ${request?.name || 'Unknown'} (${id}) marked as ${newStatus}`
-      );
+      console.error('Failed to update booking status:', error);
+      alert('Failed to update status.');
+      setUpdatingId(null);
+      return;
+    }
 
-      await fetch('/api/notify-booking-status', {
+    const req = requests.find((r) => r.id === id);
+    await logAdminAction(`booking.${newStatus}`, `Booking for ${req?.name ?? 'Unknown'} updated to ${newStatus}`);
+
+    try {
+      const res = await fetch('/api/notify-booking-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId: id, newStatus }),
       });
 
-      setRequests((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-      );
+      if (!res.ok) {
+        console.error('Notification email failed:', await res.text());
+        alert('Status updated, but email failed to send.');
+      }
+    } catch (err) {
+      console.error('Error sending notification:', err);
     }
 
+    setRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+    );
     setUpdatingId(null);
   };
 
@@ -87,7 +102,7 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Booking Requests</h1>
+      <h1 className="text-3xl font-bold mb-6">Booking Requests</h1>
 
       {loading ? (
         <p>Loading booking requests...</p>
@@ -103,13 +118,16 @@ export default function AdminBookingsPage() {
               <div>
                 <p className="font-semibold">{req.name} ({req.email})</p>
                 <p className="text-sm text-gray-600">Vendor ID: <code>{req.vendor_id}</code></p>
-                <p className="text-sm text-gray-500">Requested on {new Date(req.date).toLocaleString()}</p>
-                <p className="mt-1">
-                  <span className={`inline-block px-2 py-1 rounded text-white text-xs ${
-                    req.status === 'accepted' ? 'bg-green-600' :
-                    req.status === 'rejected' ? 'bg-red-600' : 'bg-yellow-500'
-                  }`}>{req.status}</span>
-                </p>
+                <p className="text-sm text-gray-500">Date: {new Date(req.date).toLocaleString()}</p>
+                <span className={`inline-block mt-2 px-2 py-1 rounded text-white text-xs ${
+                  req.status === 'accepted'
+                    ? 'bg-green-600'
+                    : req.status === 'rejected'
+                    ? 'bg-red-600'
+                    : 'bg-yellow-500'
+                }`}>
+                  {req.status}
+                </span>
               </div>
 
               {req.status === 'pending' && (
